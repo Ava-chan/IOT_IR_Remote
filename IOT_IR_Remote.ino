@@ -2,11 +2,13 @@
 
 #include <ESP8266WiFi.h>
 #include <WiFiClient.h> 
+#include <ESP8266mDNS.h>
 #include <ESP8266WebServer.h>
+#include <EEPROM.h>
 
-/* Set these to your desired credentials. */
-const char *ssid = "IOT_Remote";
-const int wlan_mode = 0; //0 is AP mode, 1 is Stationary mode;
+//MDNSResponder mdns; //For easy networking
+ESP8266WebServer server(80);
+const char *ssidAP = "IOT_Remote";
 
 const String html_header = "<html><head>";
 const String html_header_end = "<title>IOT_Remote</title></head><body>";
@@ -17,10 +19,8 @@ const String html_meta_iphone = "<meta name = \"viewport\" content = \"width = d
 
 bool last_record[10000];
 
-int LEDPIN=0;
-int IRINPUTPIN=2;
-
-ESP8266WebServer server(80);
+const int LEDPIN=0;
+const int IRINPUTPIN=2;
 
 /* Just a little test message.  Go to http://192.168.4.1 in a web browser
  * connected to this access point to see it.
@@ -74,7 +74,8 @@ String printAccessPoints() {
  
 void handleRoot() {
   String html = "";
-  if (wlan_mode == 0) {
+  bool wlanMode = false;
+  if (!wlanMode) {
     //AP_mode
     html += html_header;
     html += html_meta_iphone;
@@ -92,8 +93,9 @@ void handleRoot() {
     html += html_header_end;
     html += "THIS IS TODO";
     html += html_footer;
-  }  
+  } 
 	server.send(200, "text/html", html);
+    return;
 }
 
 void handleNotFound(){
@@ -109,6 +111,7 @@ void handleNotFound(){
     message += " " + server.argName(i) + ": " + server.arg(i) + "\n";
   }
   server.send(404, "text/plain", message);
+  return;
 }
 
 void showRecord() {
@@ -122,7 +125,8 @@ void showRecord() {
     html += last_record[i] == true ? "1" : "0";
   }
   html += html_footer;
-  server.send(200, "text/html", html);  
+  server.send(200, "text/html", html);
+  return;  
 }
 
 void sendRecord() {
@@ -147,6 +151,7 @@ void sendRecord() {
     }
   }
   digitalWrite(LEDPIN, LOW);
+  return;
 }
 
 void handleRecord() {
@@ -172,45 +177,89 @@ void handleRecord() {
       delayMicroseconds(13);
     }
   }
+  return;
+}
+
+bool testWifi() {
+    Serial.println("Waiting for Wifi to connect");  
+    for(int i = 0; i < 10;i++) {
+        if (WiFi.status() == WL_CONNECTED){ 
+            return(true); 
+        } 
+        delay(1000);
+    }
+    return(false);
+} 
+
+void setupAP(){
+    WiFi.mode(WIFI_STA);
+    WiFi.disconnect();
+    delay(100);
+    WiFi.softAP(ssidAP);
+}
+
+void launchWebsite(const bool webType) {
+
+    server.on("/", handleRoot);
+    server.on("/rec", handleRecord); 
+    server.on("/srec", showRecord);
+    server.on("/send", sendRecord);
+    server.onNotFound(handleNotFound);
+    server.begin();
+
+    return;
+          /*if (!mdns.begin("esp8266", WiFi.localIP())) {
+            while(1) { 
+              delay(1000);
+            }
+          }
+          // Start the server
+          server.begin();
+         
+          int b = 20;
+          int c = 0;
+          while(b == 20) { 
+             b = mdns1(webtype);
+           }*/
 }
 
 void setup() {
-	/* You can remove the password parameter if you want the AP to be open. */
-  /*WiFi.mode(WIFI_STA);
-  WiFi.disconnect();*/
-  delay(1000);
-  WiFi.mode(WIFI_AP);
-	WiFi.softAP(ssid);
 
-	IPAddress myIP = WiFi.softAPIP();
+    //configure pins
+    pinMode(LEDPIN, OUTPUT);
+    digitalWrite(LEDPIN, LOW);
+    pinMode(IRINPUTPIN, INPUT);
+    
+    EEPROM.begin(512);
+    delay(10);
+    
+    String eSSID;
+    for(int i = 0; i <32;++i){
+        eSSID+= char(EEPROM.read(i));
+    }
+    
+    String ePassword;
+    for(int i = 0; i < 96;++i){
+        ePassword+= char(EEPROM.read(i));
+    }
+
+    if(eSSID.length() > 1 ) {
+      // test wlan-connection
+        WiFi.begin(eSSID.c_str(), ePassword.c_str());
+        if (testWifi()){ 
+            launchWebsite(true);
+            return;
+        }
+    }
+    setupAP(); 
+    launchWebsite(false);
  
-	server.on("/", handleRoot);
-  server.on("/rec", handleRecord); 
-  server.on("/srec", showRecord);
-  server.on("/send", sendRecord);
-  server.onNotFound(handleNotFound);
-	server.begin();
-	//Serial.println("HTTP server started");
-  pinMode(LEDPIN, OUTPUT);
-  digitalWrite(LEDPIN, LOW);
-  pinMode(IRINPUTPIN, INPUT);
-  //Serial.println("GPIO High");
-}
 
-int led_on = HIGH;
+    return;
+}
 
 void loop() {
 	server.handleClient();
-  /*if (current_millis < millis()) {
-    current_millis = millis() + 500;
-    if (led_on == HIGH) led_on = LOW; else led_on = HIGH;
-    //digitalWrite(LEDPIN, led_on);
-    digitalWrite(LEDPIN, digitalRead(IRINPUTPIN));
-    //if (led_on == HIGH) Serial.println("0HIGH"); else Serial.println("0LOW");
-    //if ( == HIGH) Serial.println("1HIGH"); else Serial.println("1LOW");
-
-
-  }*/
-  digitalWrite(LEDPIN, digitalRead(IRINPUTPIN));
+    //digitalWrite(LEDPIN, digitalRead(IRINPUTPIN));
   
 }
