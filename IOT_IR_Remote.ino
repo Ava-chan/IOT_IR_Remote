@@ -1,20 +1,26 @@
 /* Create a WiFi access point and provide a web server on it. */
 
-#include <ESP8266WiFi.h>
-#include <WiFiClient.h> 
-#include <ESP8266mDNS.h>
+
+#include <ESP8266WiFi.h> 
 #include <ESP8266WebServer.h>
 #include <EEPROM.h>
+#include <ESP8266mDNS.h>
 
-//MDNSResponder mdns; //For easy networking
+//Addres in local wireless network: esp8266.local !
+MDNSResponder mDNS; //Apple service for easy providing url name , eventually not supported
+//https://de.wikipedia.org/wiki/Zeroconf#Multicast_DNS
+//Supported from: Linux, Windows (Apple services must be installed), Apple (Iphone?)
+//not supported for Android(S5mini!?)
 ESP8266WebServer server(80);
-const char *ssidAP = "IOT_Remote";
+
+//AccessPoint IP: 192.168.4.1
+#define ssidAP "IOT_Remote"
 
 const String html_header = "<html><head>";
-const String html_header_end = "<title>IOT_Remote</title></head><body>";
+const String html_header_end = "<title>IOT_Remote</title></head><body><center>";
 const String html_button_rec = "<a href=\"/rec\"><button>Record</button></a><br />";
-const String html_button_send = "<a href=\"/send\"><button>Send</button></a>";
-const String html_footer = "</body></html>";
+const String html_button_send = "<a href=\"/send\"><button>Send</button></a><br/>";
+const String html_footer = "</cener></body></html>";
 const String html_meta_iphone = "<meta name = \"viewport\" content = \"width = device-width\"><meta name = \"viewport\" content = \"width = 320\">";
 
 bool last_record[10000];
@@ -22,9 +28,7 @@ bool last_record[10000];
 const int LEDPIN=0;
 const int IRINPUTPIN=2;
 
-/* Just a little test message.  Go to http://192.168.4.1 in a web browser
- * connected to this access point to see it.
- */
+
 String printAccessPoints() {
   String html = "found ";
 
@@ -71,29 +75,25 @@ String printAccessPoints() {
   html += "</table>";
   return html;
 }
+
+String convertIPtoString(IPAddress adr){
+     return (String(adr[0]) +"."+String(adr[1])+"."+String(adr[2]) +"."+String(adr[3]));
+}
  
 void handleRoot() {
-  String html = "";
-  bool wlanMode = false;
-  if (!wlanMode) {
-    //AP_mode
-    html += html_header;
+    String html = html_header;
     html += html_meta_iphone;
     html += html_header_end;
+    html += "Network IP: " + convertIPtoString(WiFi.localIP()) + "<br/>";
+    html += "AccessPoint IP: " + convertIPtoString(WiFi.softAPIP()) + "<br/>";
     html += "<br />";
     html += html_button_rec;
     html += html_button_send;
+    html += "<a href=\"/configWireless\"><button>Config Network</button></a><br/>";
     html += html_footer;
 
     //html += printAccessPoints();
-  } else {
-    //Stationary_mode // TODO
-    html += html_header;
-    html += html_meta_iphone;
-    html += html_header_end;
-    html += "THIS IS TODO";
-    html += html_footer;
-  } 
+
 	server.send(200, "text/html", html);
     return;
 }
@@ -180,13 +180,86 @@ void handleRecord() {
   return;
 }
 
+void handleSubmitWireless(){
+    
+    String response = "Something went wrong, try again.";
+    if (server.args() > 0 ) {
+        //clearing eeprom
+        for(uint8_t i = 0; i < 96; ++i){ 
+            EEPROM.write(i, 0); 
+        }
+        //write ssid and password in eeprom
+        for(uint8_t i = 0; i < server.args(); i++ ){
+            if(i==0){
+                String ssid = server.arg(i);
+                //Only write data, if everything seems correct!
+                if(ssid.length() > 0 && ssid.length() <=32){
+                    response= "SSID: " + ssid + " configured.<br/>Please restart to log into wireless network.<br/>";
+                    for (uint8_t j = 0; j < ssid.length(); ++j){
+                        EEPROM.write(j, ssid[j]);
+                    }
+                }
+            }else if(i==1){
+                String pass = server.arg(i);
+                //Only write data, if everything seems correct!
+                if(pass.length() > 0 && pass.length() <= 64){
+                    for (uint8_t j = 0; j < pass.length(); ++j){
+                        EEPROM.write(32+j, pass[j]);
+                    }
+                }
+            }else{
+                //Wrong arg count, sth went wrong?
+                break;
+            }            
+        }
+        EEPROM.commit();
+    }
+    
+    String html = html_header;
+    html += "<meta http-equiv=\"refresh\" content=\"10; URL=/\">"; //Back to start page after 5 sec
+    html += html_meta_iphone;
+    html += html_header_end;
+    html += response;
+    html += html_footer;
+    server.send(200, "text/html", html);
+
+    return;
+}
+
+void handleConfigWireless(){
+    
+  String option;
+  int ap_ssids_count = WiFi.scanNetworks();
+  int k = 0;
+  for (int i = 0; i < ap_ssids_count; ++i){
+    option +="<option>"+WiFi.SSID(i)+"</option>";
+  }
+    
+  String html = "";
+  html += html_header;
+  html += "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, user-scalable=no\">";
+  html += html_header_end;
+  html += "<form action=\"/submitWireless\" method=\"POST\">";
+  html+=  "<label>SSID: </label><select name=\"SSIDs\">" +option + "</select><br/>";
+  html += "<label>Password: </label><input type=\"password\" name=\"PASSWORD\" autofocus length=64><br/><br/>";
+  html += "<input type=\"submit\" value=\"Submit\"></form>";
+  html += html_footer;
+  server.send(200, "text/html", html);
+  
+  return;
+}
+
+
 bool testWifi() {
-    Serial.println("Waiting for Wifi to connect");  
-    for(int i = 0; i < 10;i++) {
-        if (WiFi.status() == WL_CONNECTED){ 
+ 
+    for(int i = 0; i < 20;i++) {
+        if (WiFi.status() == WL_CONNECTED){
+            //Start Apple DNS Service to provide esp8266.local adress in wireless network
+            mDNS.begin("esp8266");
+            mDNS.addService("http","tcp",80);
             return(true); 
         } 
-        delay(1000);
+        delay(500); //Try some connects
     }
     return(false);
 } 
@@ -196,70 +269,63 @@ void setupAP(){
     WiFi.disconnect();
     delay(100);
     WiFi.softAP(ssidAP);
+    
+    return;
 }
 
-void launchWebsite(const bool webType) {
+void launchWebsite() {
 
     server.on("/", handleRoot);
-    server.on("/rec", handleRecord); 
-    server.on("/srec", showRecord);
-    server.on("/send", sendRecord);
+    server.on("/configWireless",handleConfigWireless);
+    server.on("/submitWireless",handleSubmitWireless);
+    //server.on("/rec", handleRecord); 
+    //server.on("/srec", showRecord);
+    //server.on("/send", sendRecord);
     server.onNotFound(handleNotFound);
     server.begin();
 
     return;
-          /*if (!mdns.begin("esp8266", WiFi.localIP())) {
-            while(1) { 
-              delay(1000);
-            }
-          }
-          // Start the server
-          server.begin();
-         
-          int b = 20;
-          int c = 0;
-          while(b == 20) { 
-             b = mdns1(webtype);
-           }*/
 }
 
-void setup() {
+void setup() { 
 
     //configure pins
     pinMode(LEDPIN, OUTPUT);
     digitalWrite(LEDPIN, LOW);
     pinMode(IRINPUTPIN, INPUT);
-    
+     
     EEPROM.begin(512);
     delay(10);
-    
+
+    //Read saved ssid from eeprom!
     String eSSID;
     for(int i = 0; i <32;++i){
         eSSID+= char(EEPROM.read(i));
     }
-    
+    //Read saved password from eeprom!
     String ePassword;
-    for(int i = 0; i < 96;++i){
+    for(int i = 32; i < 96;++i){
         ePassword+= char(EEPROM.read(i));
     }
-
+    
     if(eSSID.length() > 1 ) {
-      // test wlan-connection
+      //test wlan-connection
         WiFi.begin(eSSID.c_str(), ePassword.c_str());
         if (testWifi()){ 
-            launchWebsite(true);
+            launchWebsite();
             return;
         }
     }
+    //Connection with network failed, open an AP
     setupAP(); 
-    launchWebsite(false);
+    launchWebsite();
  
-
     return;
 }
 
 void loop() {
 	server.handleClient();
-    //digitalWrite(LEDPIN, digitalRead(IRINPUTPIN));
-  
+    return;
+    //wait for connects, maybe set here a small delay?
+    // modem sleep and low sleep are automatically used, so no sleep is necessary, deep sleep cant be used be cause the power off wifi!
 }
