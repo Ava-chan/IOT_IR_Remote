@@ -5,6 +5,7 @@
 #include <ESP8266WebServer.h>
 #include <EEPROM.h>
 #include <ESP8266mDNS.h>
+#include <vector>
 
 //Addres in local wireless network: esp8266.local !
 MDNSResponder mDNS; //Apple service for easy providing url name , eventually not supported
@@ -23,11 +24,10 @@ const String html_button_send = "<a href=\"/send\"><button>Send</button></a><br/
 const String html_footer = "</cener></body></html>";
 const String html_meta_iphone = "<meta name = \"viewport\" content = \"width = device-width\"><meta name = \"viewport\" content = \"width = 320\">";
 
-bool last_record[10000];
-
 const int LEDPIN=0;
 const int IRINPUTPIN=2;
 
+std::vector<int> vec;
 
 String printAccessPoints() {
   String html = "found ";
@@ -121,9 +121,13 @@ void showRecord() {
   html += html_header_end;
   html += "Here comes the record: <br />";
   //TODO SHOW RECORD
-  for (int i = 0; i < 10000; i+=4) {
-    html += last_record[i] == true ? "1" : "0";
+  for (int i = 0; i < vec.size(); i++) {
+    html += String(vec[i]);
+    html += ", ";
+    if (i % 10 == 0) html += "<br />";
+    //html += last_record[i] == true ? "1" : "0";
   }
+  //html += "v";
   html += html_footer;
   server.send(200, "text/html", html);
   return;  
@@ -133,21 +137,29 @@ void sendRecord() {
   String html = "";
   html += html_header;
   html += "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, user-scalable=no\">";
+  html += "<meta http-equiv=\"refresh\" content=\"4; URL=/srec\">"; //Back to start page after 3 sec
   html += html_header_end;
   html += "Send record<br />";
   html += html_footer;
   server.send(200, "text/html", html);
-  for (int k = 0; k < 5; k++)
-  for (int i = 0; i < 10000; i++) {
-    if (last_record[i] == true) {
+  for (int k = 0; k < 5; k++){
+    int v = 0;
+    bool value = true;
+    for (int i = 0; i < 10000; i++) {
+      if (i == vec[v]) {
+        v++;
+        value = !value;
+      }
+      if (value == true) {
         digitalWrite(LEDPIN, LOW);
         delayMicroseconds(13);  //1M/38K/2
         digitalWrite(LEDPIN, HIGH);
         delayMicroseconds(13);  //1M/38K/2
       }
-    else {
-      digitalWrite(LEDPIN, LOW);
-      delayMicroseconds((27));
+      else {
+        digitalWrite(LEDPIN, LOW);
+        delayMicroseconds((27));
+      }
     }
   }
   digitalWrite(LEDPIN, LOW);
@@ -158,21 +170,32 @@ void handleRecord() {
   String html = "";
   html += html_header;
   html += "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, user-scalable=no\">";
-  html += "<meta http-equiv=\"refresh\" content=\"4; URL=/\">"; //Back to start page after 3 sec
+  html += "<meta http-equiv=\"refresh\" content=\"6; URL=/srec\">"; //Back to start page after 5 sec
   html += html_header_end;
-  html += "Record now for 3 seconds";
+  html += "Record now for 5 seconds";
   html += html_footer;
   server.send(200, "text/html", html);
   //TODO RECORD
   int found_start = 0;
   int current_millis = millis();
-  while (found_start == 0 && (current_millis + 3000) >= millis()) {
+  while (found_start == 0 && (current_millis + 5000) >= millis()) {
     found_start = (digitalRead(IRINPUTPIN) == LOW) ? 1 : 0;
   }
+  //bool last_record[10000];
   if (found_start == 1) {
+    vec.clear();
+    bool change_check = true;
+    vec.push_back(0);
+    
+    delayMicroseconds(27);
     for (int i = 0; i < 10000; i++) {
-      last_record[i] = (digitalRead(IRINPUTPIN) == LOW) ? true : false;
-      delayMicroseconds(13); //26 for 36 kHz realized with two times 13
+      bool newone = (digitalRead(IRINPUTPIN) == LOW) ? true : false;
+      if (change_check != newone) {
+        change_check = newone;
+        vec.push_back(i);
+      }
+      //last_record[i] = (digitalRead(IRINPUTPIN) == LOW) ? true : false;
+      delayMicroseconds(13); //26 for 36 kHz
       digitalRead(IRINPUTPIN);
       delayMicroseconds(13);
     }
@@ -216,7 +239,7 @@ void handleSubmitWireless(){
     }
     
     String html = html_header;
-    html += "<meta http-equiv=\"refresh\" content=\"10; URL=/\">"; //Back to start page after 5 sec
+    html += "<meta http-equiv=\"refresh\" content=\"10; URL=/\">"; //Back to start page after 10 sec
     html += html_meta_iphone;
     html += html_header_end;
     html += response;
@@ -257,7 +280,7 @@ bool testWifi() {
     for(int i = 0; i < 20;i++) {
         if (WiFi.status() == WL_CONNECTED){
             //Start Apple DNS Service to provide esp8266.local adress in wireless network
-            mDNS.begin("esp8266");
+            mDNS.begin("iot_remote");
             mDNS.addService("http","tcp",80);
             return(true); 
         } 
@@ -271,7 +294,7 @@ void setupAP(){
     WiFi.disconnect();
     delay(100);
     WiFi.softAP(ssidAP);
-    
+
     return;
 }
 
