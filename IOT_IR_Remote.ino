@@ -14,7 +14,7 @@ MDNSResponder mDNS; //Apple service for easy providing url name , eventually not
 ESP8266WebServer server(80);
 
 //AccessPoint IP: 192.168.4.1
-#define ssidAP "IOT_Remote"
+#define ssidAP "IOT_Remote_M"
 
 const String html_header = "<html><head>";
 const String html_header_end = "<title>IOT_Remote</title></head><body><center>";
@@ -230,10 +230,24 @@ void handleConfigWireless(){
     
   String option;
   int ap_ssids_count = WiFi.scanNetworks();
+  String ap_ssids[ap_ssids_count];
   int k = 0;
-  for (int i = 0; i < ap_ssids_count; ++i){
+  for (int i = 0; i < ap_ssids_count; i++){
+    ap_ssids[k] = WiFi.SSID(i);
+    for (int j = 0; j < k; j++) {
+       if (ap_ssids[j] == ap_ssids[k]) {
+            k--; 
+            break;
+       }
+    }
+    k++;
+  }
+  
+  ap_ssids_count = k;
+
+  for (int i = 0; i < ap_ssids_count; i++){
     option += "<option>";
-    option += WiFi.SSID(i);
+    option += ap_ssids[i];
     option += "</option>";
   }
     
