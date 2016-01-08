@@ -232,7 +232,9 @@ void handleConfigWireless(){
   int ap_ssids_count = WiFi.scanNetworks();
   int k = 0;
   for (int i = 0; i < ap_ssids_count; ++i){
-    option +="<option>"+WiFi.SSID(i)+"</option>";
+    option += "<option>";
+    option += WiFi.SSID(i);
+    option += "</option>";
   }
     
   String html = "";
