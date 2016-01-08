@@ -280,9 +280,9 @@ void launchWebsite() {
     server.on("/", handleRoot);
     server.on("/configWireless",handleConfigWireless);
     server.on("/submitWireless",handleSubmitWireless);
-    //server.on("/rec", handleRecord); 
-    //server.on("/srec", showRecord);
-    //server.on("/send", sendRecord);
+    server.on("/rec", handleRecord); 
+    server.on("/srec", showRecord);
+    server.on("/send", sendRecord);
     server.onNotFound(handleNotFound);
     server.begin();
 
@@ -326,8 +326,8 @@ void setup() {
 }
 
 void loop() {
-	server.handleClient();
-    return;
+	  server.handleClient();
+    digitalWrite(LEDPIN, digitalRead(IRINPUTPIN));
     //wait for connects, maybe set here a small delay?
     // modem sleep and low sleep are automatically used, so no sleep is necessary, deep sleep cant be used be cause the power off wifi!
 }
