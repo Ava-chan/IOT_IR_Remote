@@ -3,9 +3,9 @@
 \begin{document}
 
 
-\title{Entwicklung eines IR-Sender und -Empfängers mit dem ESP8266}
+\title{Entwicklung eines IR-Empfänger und -Sender mit dem ESP8266}
 \subtitle{Ein Microcontroller-Anwendungs-Projekt}
-\author{}
+\author{} %TODO Später hinzufügen
 \date{\today}
 
 \maketitle
@@ -24,7 +24,33 @@
 
 \section{Konfiguration}
 \subsection{Entwicklungsumgebung}
-\subsection{Der ESP8266}
+Die Programmierung des Microcontrollers erfolgt mit der Arduino Entwicklungsumgebung.
+Zu finden ist diese IDE unter \url{https://www.arduino.cc/} (Stand: 18.01.2016).
+
+\subsection{ESP8266}
+Der ESP8266 ist ein kostengünstiger programmierbarer WLAN-System-on-a-Chip mit einer UART-und SPI-Schnittstelle.
+Ursprünglich wurde dieser SoC von Espressif entwickelt und verkauft, inzwischen bieten aber verschiedene andere Hersteller ebenfalls Varianten vom ESP8266 an.
+Diese SoC sind ab einem Preis von ca. 4€ verfügbar.
+
+Nachfolgend ist die Spezifikation eines ESP8266 laut Hersteller gelistet:
+
+\begin{itemize}
+	\item 802.11 b/g/n
+    \item Wi-Fi Direct (P2P), soft-AP
+    \item Integrated TCP/IP protocol stack
+    \item Integrated TR switch, balun, LNA, power amplifier and matching network
+    \item Integrated PLLs, regulators, DCXO and power management units
+    \item +19.5dBm output power in 802.11b mode
+    \item Power down leakage current of <10uA
+    \item Integrated low power 32-bit CPU could be used as application processor
+    \item SDIO 1.1/2.0, SPI, UART
+    \item STBC, 1×1 MIMO, 2×1 MIMO
+    \item A-MPDU \& A-MSDU aggregation \& 0.4ms guard interval
+    \item Wake up and transmit packets in < 2ms
+    \item Standby power consumption of < 1.0mW (DTIM3)
+    \item VCC: 3,3V (Nicht 5V tolerant)
+\end{itemize}
+(Quelle: \url{http://www.mikrocontroller.net/articles/ESP8266} ; Stand: 18.01.2016)
 \subsubsection{Pin-Konfiguration}
 \subsubsection{Interrupts}
 \subsubsection{Schnittstelle}
