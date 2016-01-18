@@ -1,0 +1,68 @@
+%allgemeine Formatangaben
+\documentclass[
+ a4paper, 										% Papierformat
+ 12pt,												% Schriftgröße
+ ngerman, 										% für Umlaute, Silbentrennung etc.
+ titlepage,										% es wird eine Titelseite verwendet
+ oneside, 										% einseitiges Dokument
+ captions=nooneline,					% einzeilige Gleitobjekttitel ohne Sonderbehandlung wie mehrzeilige Gleitobjekttitel behandeln
+ numbers=noenddot,						% Überschriften-??Nummerierung ohne Punkt am Ende
+ parskip=half,									% zwischen Absätzen wird eine halbe Zeile eingefügt
+ ]{scrartcl}
+
+
+\input{Header/Pakete}					% einbinden der verwendeten Latex-Pakete
+\newcommand{\qq}[1]{\glqq{#1\grqq{}}} %Gänsefüßchen
+\newcommand{\idx}[1]{#1\index{#1} } % Index drucken und schreiben
+
+\onehalfspacing 							% 1,5facher Zeilenabstand
+
+\definecolor{InterneLinkfarbe}{rgb}{0.1,0.1,0.3} 	% Farbliche Absetzung von externen Links
+\definecolor{ExterneLinkfarbe}{rgb}{0.1,0.1,0.7}	% Farbliche Absetzung von internen Links
+
+% Einstellungen für Fußnoten:
+\captionsetup{font=footnotesize,labelfont=sc,singlelinecheck=true,margin={5mm,5mm}}
+
+% Quellenangaben Stil
+\bibliographystyle{alphadin}
+
+%Ausschluss von Schusterjungen
+\clubpenalty = 10000
+%Ausschluss von Hurenkindern
+\widowpenalty = 10000
+
+
+% Beispiel für eine Listings-Codeumbebungen
+% Bei mehreren Definitionen empfielt sich das auslagern in eine externe Datei
+\lstloadlanguages{C++}
+\lstset{
+	frame=tb,
+	framesep=5pt,
+	basicstyle=\footnotesize\ttfamily,
+	showstringspaces=false,
+	keywordstyle=\ttfamily\bfseries %\color{CadetBlue},
+	identifierstyle=\ttfamily,
+	stringstyle=\ttfamily %\color{OliveGreen},
+	%commentstyle=\color{GrayBlue},
+%	rulecolor=\color{Gray},
+	xleftmargin=5pt,
+	xrightmargin=5pt,
+	aboveskip=\bigskipamount,
+	belowskip=\bigskipamount
+} 
+
+%Den Punkt am Ende jeder Beschreibung deaktivieren
+\renewcommand*{\glspostdescription}{}
+
+\setlength{\cftfignumwidth}{3em} %Befehl von tocloft
+\setlength{\cfttabnumwidth}{3em}
+%Counter verhalten verändern
+\counterwithin{figure}{section}
+\counterwithin{table}{section}
+
+%Glossar-Befehle anschalten
+\makeindex
+\makeglossaries
+\glsenablehyper
+
+\apptocmd{\UrlBreaks}{\do\f\do\m}{}{}
