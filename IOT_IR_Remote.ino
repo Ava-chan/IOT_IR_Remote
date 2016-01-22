@@ -15,17 +15,19 @@ MDNSResponder mDNS; //Apple service for easy providing url name , eventually not
 ESP8266WebServer server(80);
 
 //AccessPoint IP: 192.168.4.1
-#define ssidAP "IOT_Remote_M"
+#define ssidAP "IOT_Remote"
 
 const String html_header = "<html><head>";
-const String html_header_end = "<title>IOT_Remote</title></head><body><center>";
-const String html_button_rec = "<a href=\"/rec\"><button>Record</button></a><br />";
-const String html_button_send = "<a href=\"/send\"><button>Send</button></a><br/>";
+const String html_header_end = "<title>IOT_Remote</title><link rel=\"stylesheet\" type=\"text/css\" href=\"phone.css\"><meta name=\"viewport\" content=\"user-scalable-no, width=device-width\"></head><body><center>";
+
+//<link rel=\"stylesheet\" type=\"text/css\" href=\"standard.css\" media=\"screen and (min-width:481px)\">
+
 const String html_footer = "</cener></body></html>";
 const String html_meta_iphone = "<meta name = \"viewport\" content = \"width = device-width\"><meta name = \"viewport\" content = \"width = 320\">";
 
 const int LEDPIN=0;
 const int IRINPUTPIN=2;
+const String srec_jumpback = "";
 
 std::vector<int> vec;
 
@@ -81,20 +83,16 @@ String convertIPtoString(IPAddress adr){
 }
  
 void handleRoot() {
-    String html = html_header;
-    html += html_meta_iphone;
-    html += html_header_end;
-    html += "Network IP: " + convertIPtoString(WiFi.localIP()) + "<br/>";
-    html += "AccessPoint IP: " + convertIPtoString(WiFi.softAPIP()) + "<br/>";
-    html += "<br />";
-    html += html_button_rec;
-    html += html_button_send;
-    html += "<a href=\"/configWireless\"><button>Config Network</button></a><br/>";
-    html += html_footer;
+    String html = html_header + html_header_end
+    + "<div id=\"header\"> <h1>IOT_Remote</h1></div><br/>"
+    + "Network IP: " + convertIPtoString(WiFi.localIP()) + "<br/>"
+    + "AccessPoint IP: " + convertIPtoString(WiFi.softAPIP()) + "<br/>"
+    + "<br /><br /><div id=\"menu\"><ul><li><a href=\"/rec\">Record</a></li><li><a href=\"/send\">Send</a></li></ul><ul><li><a href=\"/configWireless\">Settings</a></li></ul>"
+    + html_footer;
 
     //html += printAccessPoints();
 
-	server.send(200, "text/html", html);
+	  server.send(200, "text/html", html);
     return;
 }
 
@@ -115,19 +113,14 @@ void handleNotFound(){
 }
 
 void showRecord() {
-  String html = "";
-  html += html_header;
-  html += "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, user-scalable=no\">";
-  html += html_header_end;
-  html += "Here comes the record: <br />";
+  String html = html_header
+  + "<meta http-equiv=\"refresh\" content=\"3; URL=/index.html\">"
+  + html_header_end
+  + "Here comes the record: <br />";
   //TODO SHOW RECORD
   for (int i = 0; i < vec.size(); i++) {
-    html += String(vec[i]);
-    html += ", ";
-    if (i % 10 == 0) html += "<br />";
-    //html += last_record[i] == true ? "1" : "0";
+    html += String(vec[i]) + ", " + (i % 10 == 0 ? "<br />" : "");
   }
-  //html += "v";
   html += html_footer;
   server.send(200, "text/html", html);
   return;  
@@ -136,75 +129,51 @@ void showRecord() {
 void sendRecord() {
   String html = "";
   html += html_header;
-  html += "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, user-scalable=no\">";
-  html += "<meta http-equiv=\"refresh\" content=\"4; URL=/srec\">"; //Back to start page after 3 sec
+  html += "<meta http-equiv=\"refresh\" content=\"3; URL=/index.html\">";
   html += html_header_end;
   html += "Send record<br />";
   html += html_footer;
   server.send(200, "text/html", html);
   for (int k = 0; k < 5; k++){
     int v = 0;
-    bool value = true;
+    bool value = false;
     for (int i = 0; i < 10000; i++) {
       if (i == vec[v]) {
         v++;
         value = !value;
       }
       if (value == true) {
-        digitalWrite(LEDPIN, LOW);
-        delayMicroseconds(13);  //1M/38K/2
         digitalWrite(LEDPIN, HIGH);
+        delayMicroseconds(13);  //1M/38K/2
+        digitalWrite(LEDPIN, LOW);
         delayMicroseconds(13);  //1M/38K/2
       }
       else {
-        digitalWrite(LEDPIN, LOW);
-        delayMicroseconds((27));
+        digitalWrite(LEDPIN, HIGH);
+        delayMicroseconds(13);
+        digitalWrite(LEDPIN, HIGH);
+        delayMicroseconds(13);
       }
     }
   }
-  digitalWrite(LEDPIN, LOW);
+  digitalWrite(LEDPIN, HIGH);
   return;
 }
+
+int found_start = -1;
 
 void handleRecord() {
   String html = "";
-  html += html_header;
-  html += "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, user-scalable=no\">";
-  html += "<meta http-equiv=\"refresh\" content=\"6; URL=/srec\">"; //Back to start page after 5 sec
-  html += html_header_end;
-  html += "Record now for 5 seconds";
-  html += html_footer;
+  html += html_header
+  + "<meta http-equiv=\"refresh\" content=\"6; URL=/srec\">" //Back to start page after 5 sec
+  + html_header_end
+  + "<div id=\"header\"> <h1>IOT_Remote</h1></div></br>Record now for 5 seconds"
+  + html_footer;
+  found_start = 0;
   server.send(200, "text/html", html);
-  //TODO RECORD
-  int found_start = 0;
-  int current_millis = millis();
-  while (found_start == 0 && (current_millis + 5000) >= millis()) {
-    found_start = (digitalRead(IRINPUTPIN) == LOW) ? 1 : 0;
-  }
-  //bool last_record[10000];
-  if (found_start == 1) {
-    vec.clear();
-    bool change_check = true;
-    vec.push_back(0);
-    
-    delayMicroseconds(27);
-    for (int i = 0; i < 10000; i++) {
-      bool newone = (digitalRead(IRINPUTPIN) == LOW) ? true : false;
-      if (change_check != newone) {
-        change_check = newone;
-        vec.push_back(i);
-      }
-      //last_record[i] = (digitalRead(IRINPUTPIN) == LOW) ? true : false;
-      delayMicroseconds(13); //26 for 36 kHz
-      digitalRead(IRINPUTPIN);
-      delayMicroseconds(13);
-    }
-  }
-  return;
 }
 
 void handleSubmitWireless(){
-    
     String response = "Something went wrong, try again.";
     if (server.args() > 0 ) {
         //clearing eeprom
@@ -250,7 +219,6 @@ void handleSubmitWireless(){
 }
 
 void handleConfigWireless(){
-    
   String option;
   int ap_ssids_count = WiFi.scanNetworks();
   String ap_ssids[ap_ssids_count];
@@ -275,19 +243,23 @@ void handleConfigWireless(){
   }
     
   String html = "";
-  html += html_header;
-  html += "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, user-scalable=no\">";
-  html += html_header_end;
-  html += "<form action=\"/submitWireless\" method=\"POST\">";
-  html+=  "<label>SSID: </label><select name=\"SSIDs\">" +option + "</select><br/>";
-  html += "<label>Password: </label><input type=\"password\" name=\"PASSWORD\" autofocus length=64><br/><br/>";
-  html += "<input type=\"submit\" value=\"Submit\"></form>";
-  html += html_footer;
+  html += html_header + html_header_end
+  + "<div id=\"header\"><h1>Settings</h1></div>"
+  + "<form action=\"/submitWireless\" method=\"POST\" id=\"wform\"><div id=\"menu\"><ul>"
+  + "<li><a align=\"left\">SSID:<br/><div class=\"select_style\"/><select name=\"SSIDs\">" +option + "</select></div></a></li>"
+  + "<li><a align=\"left\">Password: <br/><input type=\"password\" style=\"width:100%;border:1px solid gray\" name=\"PASSWORD\" autofocus length=64 /></li></a></ul>"
+  + "<ul><li><a href=\"#\" onclick=\"document.getElementById('wform').submit();\">Submit</a></li><li><a href=\"index.html\">Back</a></li></ul></div></form>"
+  + html_footer;
   server.send(200, "text/html", html);
   
   return;
 }
 
+void sendPhoneCSS () {
+  String css = "body { background-color: #ddd;  color: #222;  font-family: Helvetica;  font-size: 14px;  margin: 0;  padding: 0;}\n #header h1 {  margin: 0;  padding: 0;}\n #header h1 a {  background-color:#ccc;  border-bottom: 1px solid #666;  color: #222;  display: block;  font-size: 20px;  font-weight: bold;  padding: 10px 0;  text-align: center;  text-decoration: none;}\n#menu ul {  list-style: none;  margin: 10px;  padding: 0;}\n#menu ul li a{  background-color:#FFF;  border: 1px solid #999;  color: #222;  display: block;  font-size: 17px;  font-weight: bold;  margin-bottom: -1px;  padding: 12px 10px;  text-decoration: none;}\n#content, \n#sidebar {  padding: 12px;}\n#hinweis {  display: none;}";
+  css += ".select_style {overflow:hidden;}\n.select_style select {-webkit-appearance: none;appearance:none;width:100%;background:none;background:transparent;border:1px solid gray;outline:1px;padding:7px 10px;}";
+  server.send(200, "text/html", css);
+}
 
 bool testWifi() {
  
@@ -313,13 +285,17 @@ void setupAP(){
 }
 
 void launchWebsite() {
-
+    //HTML Pages
     server.on("/", handleRoot);
+    server.on("/index.html", handleRoot);
     server.on("/configWireless",handleConfigWireless);
     server.on("/submitWireless",handleSubmitWireless);
     server.on("/rec", handleRecord); 
     server.on("/srec", showRecord);
     server.on("/send", sendRecord);
+    //CSS Files
+    server.on("/phone.css", sendPhoneCSS);
+    //STD Handles
     server.onNotFound(handleNotFound);
     server.begin();
 
@@ -362,9 +338,46 @@ void setup() {
     return;
 }
 
+unsigned long current_millis;
+
+void checkAndDoRecord() {
+  if (found_start == 0) {
+    current_millis = millis() + 3000;
+    vec.clear();
+    found_start = 1;
+  }
+  if (found_start == 1) {
+    found_start == -1;
+    while (current_millis > millis()) {
+      if (digitalRead(IRINPUTPIN) == LOW) {
+        found_start = 2;
+        break;
+      }
+    }
+  } 
+  if (found_start == 2) {
+    bool change_check = true;
+    vec.push_back(0);
+    
+    for (int i = 0; i < 10000; i++) {
+      bool newone = (digitalRead(IRINPUTPIN) == LOW) ? true : false;
+      if (change_check != newone) {
+        change_check = newone;
+        vec.push_back(i);
+      }
+      //last_record[i] = (digitalRead(IRINPUTPIN) == LOW) ? true : false;
+      delayMicroseconds(13); //26 for 36 kHz
+      digitalRead(IRINPUTPIN);
+      delayMicroseconds(13);
+    }
+    if (vec.size() < 20) {
+      found_start = 1; 
+      vec.clear();
+    } else found_start = -1;
+  }
+}
+
 void loop() {
-	  server.handleClient();
-    digitalWrite(LEDPIN, digitalRead(IRINPUTPIN));
-    //wait for connects, maybe set here a small delay?
-    // modem sleep and low sleep are automatically used, so no sleep is necessary, deep sleep cant be used be cause the power off wifi!
+  server.handleClient();
+  checkAndDoRecord();
 }

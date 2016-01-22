@@ -21,7 +21,7 @@
 \definecolor{ExterneLinkfarbe}{rgb}{0.1,0.1,0.7}	% Farbliche Absetzung von internen Links
 
 % Einstellungen für Fußnoten:
-\captionsetup{font=footnotesize,labelfont=sc,singlelinecheck=true,margin={5mm,5mm}}
+%\captionsetup{font=footnotesize,labelfont=sc,singlelinecheck=true,margin={5mm,5mm}}
 
 % Quellenangaben Stil
 \bibliographystyle{alphadin}
@@ -34,35 +34,35 @@
 
 % Beispiel für eine Listings-Codeumbebungen
 % Bei mehreren Definitionen empfielt sich das auslagern in eine externe Datei
-\lstloadlanguages{C++}
-\lstset{
-	frame=tb,
-	framesep=5pt,
-	basicstyle=\footnotesize\ttfamily,
-	showstringspaces=false,
-	keywordstyle=\ttfamily\bfseries %\color{CadetBlue},
-	identifierstyle=\ttfamily,
-	stringstyle=\ttfamily %\color{OliveGreen},
-	%commentstyle=\color{GrayBlue},
+%{C++}
+%\lstset{
+%	frame=tb,
+%	framesep=5pt,
+%	basicstyle=\footnotesize\ttfamily,
+%	showstringspaces=false,
+%	keywordstyle=\ttfamily\bfseries %\color{CadetBlue},
+%	identifierstyle=\ttfamily,
+%	stringstyle=\ttfamily %\color{OliveGreen},
+%	%commentstyle=\color{GrayBlue},
 %	rulecolor=\color{Gray},
-	xleftmargin=5pt,
-	xrightmargin=5pt,
-	aboveskip=\bigskipamount,
-	belowskip=\bigskipamount
-} 
+%	xleftmargin=5pt,
+%	xrightmargin=5pt,
+%	aboveskip=\bigskipamount,
+%	belowskip=\bigskipamount
+%} 
 
 %Den Punkt am Ende jeder Beschreibung deaktivieren
-\renewcommand*{\glspostdescription}{}
+%\renewcommand*{\glspostdescription}{}
 
 \setlength{\cftfignumwidth}{3em} %Befehl von tocloft
 \setlength{\cfttabnumwidth}{3em}
 %Counter verhalten verändern
-\counterwithin{figure}{section}
-\counterwithin{table}{section}
+%\counterwithin{figure}{section}
+%\counterwithin{table}{section}
 
 %Glossar-Befehle anschalten
 \makeindex
-\makeglossaries
-\glsenablehyper
+%\makeglossaries
+%\glsenablehyper
 
 \apptocmd{\UrlBreaks}{\do\f\do\m}{}{}
