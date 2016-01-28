@@ -18,9 +18,26 @@
 \pagebreak
 
 \section{Einleitung}
-
 \subsection{Ausgangspunkt}
+Als Ausgangspunkt des Projektes ist die Absicht eine Infrarot-Fernbedingung mit Hilfe eines Mikrocontrollers zu realisieren.
+Dieser soll dabei über eine Website im heimischen Netzwerk angesprochen und entsprechend gesteuert werden können.
+
+Zur Umsetzung dieses Vorhabens bietet sich der ESP8266 an.
+Dieser Mikrocontroller ist preiswert und besitzt ein integriertes wlan-Modul.
+
 \subsection{Ziele}
+Ziel des Projektes ist es, eine Schaltung einschließlich dazugehöriger Mikrocontroller-Software zu entwickeln, die folgende Funktionen bietet:
+
+\begin{itemize}
+	\item Mikrocontroller muss Netzwerkfunktionalität als Server bieten
+	\item Kommunikation mit Server über drahtloses Netzwerk
+	\item AcessPoint zur Konfiguration des ESP8266
+	\item Einwahl in vorhandenes drahtloses Netzwerk und Speichern der Einwahldaten
+	\item Steuerung des ESP8266 über Website
+	\item Erfassen, Speichern und Ausgabe von Infrarot-Signalen.
+\end{itemize}
+
+Alle diese Ziele sind mit Hilfe eines ESP8266 und ein paar weiterer Komponenten realisierbar.
 
 \section{Konfiguration}
 \subsection{Entwicklungsumgebung}
@@ -51,12 +68,28 @@ Nachfolgend ist die Spezifikation eines ESP8266 laut Hersteller gelistet:
     \item VCC: 3,3V (Nicht 5V tolerant)
 \end{itemize}
 (Quelle: \url{http://www.mikrocontroller.net/articles/ESP8266} ; Stand: 18.01.2016)
+
+
+\begin{figure}
+	\centering
+	\begin{minipage}{0.45\textwidth}
+			\includegraphics[scale=1.5]{Abbildungen/ESP8266A}
+	\end{minipage}
+	\hfill
+	\begin{minipage}{0.45\textwidth} 
+			\includegraphics[scale=1.5]{Abbildungen/ESP8266}
+	\end{minipage}
+	\caption{ESP8266 Platine und Schaltung}
+\end{figure}
+
 \subsubsection{Pin-Konfiguration}
-\subsubsection{Interrupts}
+%ESP8266 Modul hat 2 Digitale Ein/Ausgänge. GPO2 benutzen wir als Eingang.
+%Warum wird GPO0 als low aktiv benutzt? GPO0 wird für das Aktivieren der Firmware Update verwendet. So das für normale Betrieb des ESP8266 Moduls nach dem Reset immer HIGH Pegel anliegen soll.
 \subsubsection{Schnittstelle}
 
 \section{Realisierung}
 \subsection{Aufbau}
+
 
 \begin{figure}
 	\centering
