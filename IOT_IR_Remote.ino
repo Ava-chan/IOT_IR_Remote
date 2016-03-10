@@ -7,7 +7,7 @@
 #include <ESP8266mDNS.h>
 #include <vector>
 
-//Addres in local wireless network: esp8266.local !
+//Addres in local wireless network: iot_remote.local !
 MDNSResponder mDNS; //Apple service for easy providing url name , eventually not supported
 //https://de.wikipedia.org/wiki/Zeroconf#Multicast_DNS
 //Supported from: Linux, Windows (Apple services must be installed), Apple (Iphone?)
@@ -31,53 +31,6 @@ const String srec_jumpback = "";
 
 std::vector<int> vec;
 
-String printAccessPoints() {
-  String html = "found ";
-
-  int ap_ssids_count = WiFi.scanNetworks();
-  String ap_ssids[ap_ssids_count];
-  int k = 0;
-  for (int i = 0; i < ap_ssids_count; ++i)
-  {
-    // Print SSID and RSSI for each network found
-    delay(10);
-    ap_ssids[k] = "<tr><td>";
-    if (WiFi.encryptionType(i) == ENC_TYPE_NONE) {
-      // not encrypted
-      ap_ssids[k] += "NONE";
-    } else if (WiFi.encryptionType(i) == ENC_TYPE_TKIP || WiFi.encryptionType(i) == ENC_TYPE_CCMP) {
-      ap_ssids[k] += "WPA";
-    } else if (WiFi.encryptionType(i) == ENC_TYPE_WEP) {
-      ap_ssids[k] += "WEP";
-    } else if (WiFi.encryptionType(i) == ENC_TYPE_AUTO) {
-      ap_ssids[k] += "AUTO";
-    } else {
-      
-      // encrypted
-      ap_ssids[k] += "***";
-    }
-    ap_ssids[k] += "</td><td>";
-    ap_ssids[k] += WiFi.SSID(i);
-    ap_ssids[k] += "</td></tr>";
-    for (int j = 0; j < k; j++) {
-       if (ap_ssids[j] == ap_ssids[k]) {
-        k--; 
-        break;
-       }
-    }
-    k++;
-  }
-  ap_ssids_count = k;
-  html += ap_ssids_count;
-  html += " APs: <br /><br />";
-  html += "<table>";    
-  for (int i = 0; i < ap_ssids_count; i++) {
-    html += ap_ssids[i];
-  }
-  html += "</table>";
-  return html;
-}
-
 String convertIPtoString(IPAddress adr){
      return (String(adr[0]) +"."+String(adr[1])+"."+String(adr[2]) +"."+String(adr[3]));
 }
@@ -89,10 +42,7 @@ void handleRoot() {
     + "AccessPoint IP: " + convertIPtoString(WiFi.softAPIP()) + "<br/>"
     + "<br /><br /><div id=\"menu\"><ul><li><a href=\"/rec\">Record</a></li><li><a href=\"/send\">Send</a></li></ul><ul><li><a href=\"/configWireless\">Settings</a></li></ul>"
     + html_footer;
-
-    //html += printAccessPoints();
-
-	  server.send(200, "text/html", html);
+    server.send(200, "text/html", html);
     return;
 }
 
@@ -265,7 +215,7 @@ bool testWifi() {
  
     for(int i = 0; i < 20;i++) {
         if (WiFi.status() == WL_CONNECTED){
-            //Start Apple DNS Service to provide esp8266.local adress in wireless network
+            //Start Apple DNS Service to provide iot_remote.local adress in wireless network
             mDNS.begin("iot_remote");
             mDNS.addService("http","tcp",80);
             return(true); 
