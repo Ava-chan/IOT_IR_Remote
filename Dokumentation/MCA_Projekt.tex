@@ -26,6 +26,7 @@ Zur Umsetzung dieses Vorhabens bietet sich der Mikrocontroller ESP8266 an.
 Dieser Mikrocontroller ist preiswert und besitzt ein integriertes WLAN-Modul.
 
 \subsection{Ziele}
+%TODO Vollständig?
 Ziel des Projektes ist es, eine Schaltung einschließlich dazugehöriger Mikrocontroller-Software zu entwickeln, die folgende Funktionen bietet:
 
 \begin{itemize}
@@ -41,6 +42,7 @@ Alle diese Ziele sind mit Hilfe eines ESP8266 und weiterer Komponenten realisier
 
 \section{Grundlagen}
 \subsection{Der ESP8266}
+%TODO Ausreichend?
 Der ESP8266 ist ein kostengünstiger programmierbarer WLAN-System-on-a-Chip mit einer UART-und SPI-Schnittstelle.
 Ursprünglich wurde dieser SoC von Espressif entwickelt und verkauft, inzwischen bieten aber verschiedene andere Hersteller ebenfalls Varianten vom ESP8266 an.
 Diese SoC sind ab einem Preis von ca. 4€ verfügbar.
@@ -82,7 +84,9 @@ In der \autoref{fig:ESP8266} ist ein ESP8266 mit dem dazugehörigen Pinlayout da
 \end{figure}
 
 \subsection{Programmierung}
+%TODO Ausreichend?
 Die Programmierung des Mikrocontrollers erfolgt mit der Arduino IDE.
+In dieser IDE kann mit einer C/C++-Syntax programmiert werden.
 Zu finden ist diese IDE unter \url{https://www.arduino.cc/} (Stand: 18.01.2016).
 
 Weiterhin wird der ESP8266 über die TXD- und RXD-Leitungen mit Hilfe des UART-Protokolls programmiert.
@@ -90,9 +94,9 @@ Damit der Controller in den Programmiermodus wechselt, muss beim Start der GPIO\
 Anschließend kann die durch Cross-Compiling erzeugte Binary der Arduino Entwicklungsumgebung innerhalb der IDE an den ESP8266 übertragen werden.
 Für die Programmierung bieten sich beispielsweise sogenannte USB-to-UART-Programmierkabel an (beispielsweise der PL2303).
 Wichtig: VCC solcher Kabeln liefern üblicherweise 5V! Der Mikrocontroller ist nicht 5V tolerant.
-Für den normalen Betrieb des ESP8266 muss GPI0\_0 auf High liegen.
 
 \subsection{Funktionsweise Infrarot}
+%TODO Ausreichend?
 Damit eine WLAN-gesteuerte Infrarotfernbedingung realisiert werden kann, müssen zunächst die Grundlagen einer solchen Fernbedingung kurz erklärt werden.
 
 Eine Infrarot-Fernbedienung sendet über eine Infrarotleuchtdiode ein Signal im Infrarotbereich.
@@ -115,13 +119,13 @@ Weiterhin besitzt der integrierte Schaltkreis einen Bandpassfilter um Störungen
 Meist sind Fotodiode und Schaltkreis in einem Kunststoffgehäuse integriert.
 Der TSOP4836 ist zum Beispiel solch ein Empfänger für die Trägerfrequenz von 38kHz.
 
-%ESP8266 Modul hat 2 Digitale Ein/Ausgänge. GPO2 benutzen wir als Eingang.
-%Warum wird GPO0 als low aktiv benutzt? GPO0 wird für das Aktivieren der Firmware Update verwendet. So das für normale Betrieb des ESP8266 Moduls nach dem Reset immer HIGH Pegel anliegen soll.
+Auf die konkreten Details zu PWM wird in dieser Dokumentation nicht eingegangen.
 
 \section{Realisierung}
 Nachdem die Grundlagen für das Projekt betrachtet wurden, soll nun die konkrete Realisierung des Projektes verdeutlicht werden.
 
 \subsection{Aufbau}
+%TODO Vollständig?
 Die \autoref{fig:Schalplan} zeigt den Schaltplan für die Realisierung einer Infrarot-Fernbedingung inklusive Empfänger.
 
 \begin{figure}
@@ -137,26 +141,29 @@ Der ESP8266 selbst benötigt 3,3V und ist nicht 5V tolerant, sodass ein fester S
 Als Spannungsregler bietet sich zum Beispiel der LM1117-3V3 (verwendet) oder ein L7805 an.
 %http://www.ti.com/lit/ds/symlink/lm1117.pdf
 Der Spannungsregler ist im Schaltplan als 78XX dargestellt.
-Zur Spannungsstabilisierung besitzt der Spannungsregler zwischen Out und GND einen 10$\mu$F-Kondensator.
+Zur Spannungsstabilisierung besitzt der Spannungsregler zwischen dem 3,3V-Ausgang und Masse einen 10$\mu$F-Kondensator.
+
 Nun wird für den ESP8266 die benötigte Spannung von 3,3V bereitgestellt.
-%TODO Schaltplan!!
-Die Pins VCC und CHPD (Chip Power Down) werden mit der Spannungsquelle 3,3V verbunden und GND entsprechend auf Masse gelegt.
+Die Pins VCC und CH\_PD (Chip Power Down) werden mit der Spannungsquelle 3,3V verbunden und GND entsprechend auf Masse gelegt.
 Der RST-Pin (Reset) wird mit einem Taster verbunden, welcher bei betätigen diesen Pin auf Masse zieht (interner Pull Up) und somit den Mikrocontroller zurücksetzt.
-An dem GPIO\_0 ist ein DIP Schalter angeschlossen.
+
+Das ESP8266-Modul besitzt 2 Digitale Ein beziehungsweise Ausgänge. GPIO\_0 benutzen wir als Ausgang und GPIO\_2 benutzen wir als Eingang.
+Wie diese Pins arbeiten wird bei der Programmierung festgelegt.
+
+An dem GPIO\_0 ist ein DIP-Schalter angeschlossen.
 Dieser dient dazu zwischen dem Programmiermodus und dem normalen Modus zu Wechseln.
-DerPin wird als Low aktiv benutzt, sodass für den normalen Betrieb und nach einem Reset immer High Pegel anliegen muss.
-Für das Programieren wird dieseer PIN auf Masse gezogen in dem der Schalter entsprechend gesetzt wird.
-Andernfalls ist der PIN mit einer Infrarotdiode (1,5V, 80mA) inklusive Vorwiederstand(22 Ohm) verbunden.
-Diode und Wiederstand mit der 3,3V Spannungsquelle verbunden.
+Der Pin ist Low-Aktiv, sodass für den normalen Betrieb und nach einem Reset immer 3,3V anliegen muss.
+Für das Programmieren wird dieser PIN auf Masse gezogen in dem der Schalter entsprechend gesetzt wird und ein Reset ausgeführt wird.
+Andernfalls ist der DIP-Schalter mit einer Infrarotdiode (1,5V, 80mA) inklusive Vorwiederstand(22 Ohm) verbunden.
+Die Diode und der Widerstand sind mit der 3,3V Spannungsquelle verbunden.
+Diese Diode dient später dazu die Infrarotsignale zu senden.
 
-Diese Diode dient später dazu die Infrarotsignale zu senden, in dem der GPIO\_0 als Ausgang verwendet wird.
-
-Der GPIO\_0 2 wird mit dem Infrarotempfänger verbunden, daher fungiert dieser PIN als Eingang zur Erfassung der Infrarot-Signale.
+Der GPIO\_0 2 wird mit dem Infrarotempfänger verbunden und dient zur Erfassung der Infrarot-Signale.
 Der Infrarotempfänger wird entsprechend mit der 3,3V Spannungsquelle und der Masse verbunden.
 
-Aufgrund das Senden und Empfangen nicht gleichzeitg möglich sind, bedarf es keiner Abschirmung zwischen Sender und Empfänger.
+Aufgrund das Senden und Empfangen nicht gleichzeitig möglich sind, bedarf es keiner Abschirmung zwischen Sender und Empfänger.
 
-Die \autoref{fig:Steckplatine} zeigt den Aufbau auf einer Steckplatine
+Die \autoref{fig:Steckplatine} zeigt den Aufbau auf einer Steckplatine.
 
 \begin{figure}
 	\centering
@@ -166,20 +173,47 @@ Die \autoref{fig:Steckplatine} zeigt den Aufbau auf einer Steckplatine
 \end{figure}
 
 
-
-
-
 \subsection{Implementierung}
-%Programmablaufplan
-Fortunately, there is a way around this ESP8266 constraint. The trick is to create the 38 kHz modulation by simply toggling a digital output; logic 1 and logic 0. The duration of these pulses determine the command sent to the remote receiver. But how do we generate 38 kHz pulses?
+%TODO Programmablaufplan
+%TODO Noch zu vervollständigen
 
-Simple…
+\subsubsection{Infrarotsignale Empfangen}
+%TODO erklären ?? Wie funktioniert das?
+\subsubsection{Infrarotsignale Senden}
+Damit Infrarotsignale mit einer Trägerfrequenz von 38kHz gesendet werden, bedarf es einem Trick in der Programmierung um dies zu realisieren.
+Dies geschieht in dem der digitale Ausgang GPIO\_2 zwischen einer logischen 1 und 0 alterniert.
+Die Länge des Pulses beschreibt den gesendeten Befehl an den Infrarotempfänger.
 
-Using the ESP8266 micro-second delay statement “os\_delay\_us(us)”, we can create a 38 kHz pulse train. Each pulse period is 1/38000 seconds (26.3 us) long. Rounding that off to 26 us, the modulation frequency is easily achieved with:
+Dies kann mit Hilfe eines $\mu$s-delay Befehl realisiert werden.
+Jeder Puls ist 1/38000 Sekunden (26,3 $\mu$s) lang.
+Gerundet auf 26 $\mu$s ist die Modulationsfrequenz realisierbar mit:
+%TODO Pseudocode wenn fertig
 
 \subsection{Verwendung}
-%Screenshots browser, verwendung beschreiben
-\section{Zusammenfassung}
-%todo footmarks für quellen und erklärungen von begriffen
+%TODO Screenshots browser (wäre cool, wenn du das machst Eike.., da bei mir der Mikrocontroller nachwievor rumzickt..) , verwendung beschreiben
+%TODO Herr Bastian mag es, wenn ALLES gelernte in das Fazit / Zusammenfassung einfließt-> Fazit darf ruhig mehrere Seiten lang sein!!
+%TODO Bitte ergänze das hier bitte mit @ Eike
+%TODO Vervollständigen
+\section{Fazit}
+
+Im Verlaufe des Projektes ist eine über ein drahtloses Netzwerk steuerbare Mikrocontroller-Anwendung entstanden, welcher in einem heimischen Netzwerk verwendet werden kann.
+
+Erworbene Fertigkeiten:
+\begin{itemize}
+	\item Programmierung in einer Arduino IDE inklusive entsprechender Konfiguration der IDE
+	\item Programmierung in C/C++ ähnlicher Sprache
+	\item Umgang mit dem ESP8266
+	\item Erworbenes Verständnis für die Funktionsweise von Infrarotsendern und Empfängern
+\end{itemize} 
+
+Es ist in der gewählten Realisierung nicht möglich Stromsparmaßnahmen des Mikrocontrollers zu verwenden.
+Dies ist damit begründet, das die drahtlose Netzwerkverbindung permanent aufrecht gehalten werden muss.
+Verwendung von Stromsparmaßnahmen würde dazu führen, dass das Modul die Verbindung zum Netzwerk verliert und anschließend nicht erreichbar ist.
+Begründet ist dies damit, da die Steuerung über den Webserver des Moduls erfolgt.
+
+Der Quellcode für das Projekt ist auf GitHub verfügbar unter:\\ \url{https://github.com/Ava-chan/IOT_IR_Remote}
+
+
+%TODO footmarks für quellen und erklärungen von begriffen
 \pagestyle{empty}										% Leere Seite 
 \end{document}
