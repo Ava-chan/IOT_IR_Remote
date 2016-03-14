@@ -4,7 +4,7 @@
 
 
 \title{Entwicklung eines IR-Empfänger und -Sender mit dem ESP8266}
-\subtitle{Dokumentation: Microcontroller-Anwendungs-Projekt}
+\subtitle{Dokumentation: Mikrocontroller-Anwendungs-Projekt}
 \author{} %TODO Später hinzufügen
 \date{\today}
 
@@ -19,13 +19,12 @@
 
 \section{Einleitung}
 \subsection{Ausgangspunkt}
-Der Ausgangspunkt des Projektes ist die Absicht eine Infrarot-Fernbedingung mit Hilfe eines Mikrocontrollers zu realisieren. Im Rahmen des aktuellen Hype um \acs{IoT} stellt diese Anforderung für uns eine interessante Möglichkeit da, bisher nicht \acs{IoT} fähige, über Infrarot Fernbedienung gesteuerten Geräten diese Funktion ``nachzurüsten''. Hierdurch soll die Ansteuerung der Geräte wesentlich individueller belegbar sein, ohne dass, wie in anderen schon vorhanden Lösungen, (z.B. Logitech Harmony - \url{http://www.logitech.com/de-de/harmony-remotes}) eine neue Fernbedienung die alte ersetzt. Vielmehr soll ein schon vorhandenes Gerät/vorhandene Geräte diese Aufgabe mit übernehmen können.
+Der Ausgangspunkt des Projektes ist die Absicht eine Infrarotfernbedingung mit Hilfe eines Mikrocontrollers zu realisieren. Im Rahmen des aktuellen Hype um \acs{IoT} stellt diese Anforderung für uns eine interessante Möglichkeit da, bisher nicht \acs{IoT} fähige, über Infrarotfernbedienung gesteuerten Geräten diese Funktion \qq{nachzurüsten}. Hierdurch soll die Ansteuerung der Geräte wesentlich individueller belegbar sein, ohne dass, wie in anderen schon vorhanden Lösungen, (z.B. Logitech Harmony\footnote{ \url{http://www.logitech.com/de-de/harmony-remotes} ; Stand: \today}) eine neue Fernbedienung die alte ersetzt. Vielmehr soll ein schon vorhandenes Gerät/vorhandene Geräte diese Aufgabe mit übernehmen können.
 
 Zur Umsetzung dieses Vorhabens bietet sich der Mikrocontroller ESP8266 an.
 Er ist preiswert und besitzt ein integriertes WLAN-Modul.
 
 \subsection{Ziele}
-%TODO Vollständig?
 Ziel des Projektes ist es, eine Schaltung einschließlich dazugehöriger Mikrocontroller-Software zu entwickeln, die folgende Funktionen bietet:
 
 \begin{itemize}
@@ -41,31 +40,29 @@ Alle diese Ziele sind mit Hilfe eines ESP8266 und weiterer Komponenten realisier
 
 \section{Grundlagen}
 \subsection{Der ESP8266}
-%TODO Ausreichend?
 Der ESP8266 ist ein kostengünstiges, programmierbares \ac{SoC} mit einer \acs{WLAN}, \acs{UART}-und \acs{SPI}-Schnittstelle.
 Ursprünglich wurde dieser \acs{SoC} von Espressif (daher ESP) entwickelt und verkauft, inzwischen bieten aber verschiedene andere Hersteller ebenfalls Varianten vom ESP8266 bzw. dem erweiterten ESP8266EX an.
-Diese sind ab einem Stückpreis von ca. 2,00 € z.B. über AliExpress (\url{http://www.aliexpress.com}) verfügbar.
+Diese sind ab einem Stückpreis von ca. 2,00 € z.B. über AliExpress\footnote{\url{http://www.aliexpress.com} ; Stand: \today} verfügbar.
 
-Nachfolgend ist die Spezifikation eines ESP8266 laut Espressif gelistet:
+Nachfolgend ist die Spezifikation eines ESP8266 laut Espressif\footnote{\url{http://www.mikrocontroller.net/articles/ESP8266} ; Stand: \today} gelistet:
 
-%TODO - Halbwegs auf deutsch übersetzen ... oder komplett in english (NICHT 5V TOLERANT)
 \begin{itemize}
     \item Wi-Fi Standards: 802.11 b/g/n, Wi-Fi Direct (\acs{P2P}), \acs{soft-AP}
     \item Integrierter TCP/IP Protokollstack
-    \item Integrierter \acs{T/R} switch, \acs{balun}, \acs{LNA}, power amplifier and matching network
+    \item Integrierter \acs{T/R} switch, \acs{balun}, \acs{LNA}, Leistungsverstärker
     \item Integrierte \acs{PLL}s, \acs{DCXO} und Spannungsversorgung
     \item +19.5dBm Ausgangsleistung im 802.11b Modus
-    \item Power down leakage current of <10$\mu$A
-    \item Integrierte verbrauchsarme 32-bit CPU (80 MHz)
+    \item Power-Down Leckstrom <10$\mu$A
+    \item Integrierte Verbrauchsarme 32-bit CPU (80 MHz)
     \item \acs{SDIO} 1.1/2.0, \acs{SPI}, \acs{UART}
     \item \acs{STBC}, 2×1 \acs{MIMO}
-    \item \acs{A-MPDU} \& \acs{A-MSDU} aggregation \& 0.4ms guard interval
+    \item \acs{A-MPDU} \& \acs{A-MSDU} \& 0.4ms Schutzintervalle
     \item Aufwachen und übermitteln von Paketen in < 2ms
     \item Standby Leistungsaufnahme < 1.0mW (\acs{DTIM3})
     \item\acs{VCC}: 3,3V (Nicht 5V tolerant)
     \item Flash Größe: 512kB - 4MB 
 \end{itemize}
-(Quelle: \url{http://www.mikrocontroller.net/articles/ESP8266} ; Stand: 18.01.2016)
+
 Verfügbare Flash-Größe, Arbeitsspeicher und CPU-Frequenz sind Modell und Hersteller abhängig. Häufig wird die versendete Form innerhalb des online Angebots nicht genauer beschrieben.
 
 In der \autoref{fig:ESP8266} ist ein ESP8266 mit dem dazugehörigen Pinlayout dargestellt.
@@ -84,10 +81,8 @@ In der \autoref{fig:ESP8266} ist ein ESP8266 mit dem dazugehörigen Pinlayout da
 \end{figure}
 
 \subsection{Programmierung}
-%TODO Ausreichend?
-Die Programmierung des Mikrocontrollers kann mit der Arduino IDE erfolgen. Hierzu muss das Community Package esp8266 installiert sein, welches zusätzliche Header und Funktionen, sowie Compiler und Programmierdefinitionen beinhaltet.
-In IDE kann mit einer C/C++-Syntax programmiert werden, wobei der Compiler einige aber nicht alle Befehlssätze des C++11 Standards unterstützt.
-Zu finden ist diese IDE unter \url{https://www.arduino.cc/} (Stand: 18.01.2016).
+Die Programmierung des Mikrocontrollers kann mit der Arduino IDE\footnote{\url{https://www.arduino.cc/} ; Stand: \today} erfolgen. Hierzu muss das Community Package esp8266 installiert sein, welches zusätzliche Header und Funktionen, sowie Compiler und Programmierdefinitionen beinhaltet.
+In der IDE kann mit einer C/C++-Syntax programmiert werden, wobei der Compiler einige, aber nicht alle Befehlssätze des C++11 Standards unterstützt.
 
 Weiterhin wird der ESP8266 über die \acs(TXD)- und \acs(RXD)-Leitungen mit Hilfe des \acs{UART}-Protokolls programmiert.
 Damit der Controller in den Programmiermodus wechselt, muss beim Start der \acs{GPIO}\_0 auf Masse liegen (Controller startet im Programmiermodus).
@@ -138,8 +133,7 @@ Die \autoref{fig:Schalplan} zeigt den Schaltplan für die Realisierung einer Inf
 Für die Programmierung des Mikrocontrollers wird ein USB-to-UART-Programmierer (PL2303) verwendet.
 Dieser liefert an VCC 5V.
 Der ESP8266 selbst benötigt 3,3V und ist nicht 5V tolerant, sodass ein fester Spannungsregler verwendet wird um 3,3V für den Mikrocontroller zur Verfügung zu stellen.
-Als Spannungsregler bietet sich zum Beispiel der LM1117-3V3 (verwendet) oder ein L7805 an.
-%http://www.ti.com/lit/ds/symlink/lm1117.pdf
+Als Spannungsregler bietet sich zum Beispiel der LM1117-3V3\footnote{\url{http://www.ti.com/lit/ds/symlink/lm1117.pdf} ; Stand: \today} (verwendet) oder ein L7805 an.
 Der Spannungsregler ist im Schaltplan als 78XX dargestellt.
 Zur Spannungsstabilisierung besitzt der Spannungsregler zwischen dem 3,3V-Ausgang und Masse einen 10$\mu$F-Kondensator.
 
@@ -211,37 +205,37 @@ Dies ist damit begründet, das die drahtlose Netzwerkverbindung permanent aufrec
 Verwendung von Stromsparmaßnahmen würde dazu führen, dass das Modul die Verbindung zum Netzwerk verliert und anschließend nicht erreichbar ist.
 Begründet ist dies damit, da die Steuerung über den Webserver des Moduls erfolgt.
 
-Der Quellcode für das Projekt ist auf GitHub verfügbar unter:\\ \url{https://github.com/Ava-chan/IOT_IR_Remote}
+Der Quellcode für das Projekt ist auf GitHub verfügbar unter:\\ \url{https://github.com/Ava-chan/IOT_IR_Remote}\footnote{Stand: \today}
 
 \pagebreak
-%TODO footmarks für quellen und erklärungen von begriffen
+
 \begin{appendix}
 \pagestyle{empty}	
 \section{Abkürzungsverzeichnis}
 
 \begin{acronym}
-\acro{A-MPDU}{}
-\acro{A-MSDU}{}
+\acro{A-MPDU}{\textbf{A}ggregated \textbf{M}ac \textbf{P}rotocol \textbf{D}ata \textbf{U}nit}{ - Eine Funktion im Wlan-Standard 802.11e und 802.11n um bei einer einzelne Übertragung mehrere Pakete zu senden}
+\acro{A-MSDU}{\textbf{A}ggregated \textbf{M}ac \textbf{S}ervice \textbf{D}ata}{ - Eine Funktion im Wlan-Standard 802.11e und 802.11n um bei einer einzelne Übertragung mehrere Pakete zu senden}
 \acro{balun}{\textbf{bal}anced-\textbf{un}balanced}{ - Wandler zwischen symmetrischen und unsymmetrischen Leistungssystemen}
-\acro{DCXO}{Digitally Controlled MEMS Oscillators}{ - digital gesteuerter Quarzoszillator}
-\acro{DTIM3}{}
-\acro{GPIO}{}
-\acro{IoT}{Internet of Things}{- ``intelligente Gegenstände'' unterstützen Menschen unmerklich}
+\acro{DCXO}{\textbf{D}igitally \textbf{C}ontrolled \textbf{O}scillator}{ - digital gesteuerter Quarzoszillator}
+\acro{DTIM3}{\textbf{D}elivery \textbf{T}raffic \textbf{I}ndication \textbf{M}essage}{- regelmäßiger Broadcast des Access Point um Wireless-Stationen aufzuwecken}
+\acro{GPIO}{\textbf{G}eneral \textbf{P}urpose \textbf{I}nput \textbf{O}utput}{ - Durch logische Programmierung kann PIN Verhalten als Eingang oder Ausgang definiert werden}
+\acro{IoT}{\textbf{I}nternet \textbf{o}f \textbf{T}hings}{ - \qq{intelligente Gegenstände} unterstützen Menschen unmerklich}
 \acro{LNA}{\textbf{L}ow \textbf{N}oise \textbf{A}mplifier}{ - Rausch armer Verstärker}
-\acro{MIMO}{}
-\acro{P2P}{Peer to Peer}{ - Direkte Endgerät zu Endgerät Kommunikation OHNE Access Point}
-\acro{PLL}{} %TODO Ich weiß nicht was es ist
-\acro{RXD}{}
-\acro{soft-AP}{software enabled access point}{- ein über Software erstellter Access Point, welcher auf einem Gerät erzeugt wird welches nicht speziell als Router gedacht ist}
-\acro{SDIO}{Secure Digital Input Output}{ - SD-Interface um Peripheriegeräte (z.B. Webcam, GPS, Ethernet, ...) anzusprechen}
-\acro{SPI}{}
-\acro{SoC}{System-on-a-Chip}{ - Integration aller Systeme in einem Chip / einem Bauteil}
-\acro{STBC}{}
-\acro{T/R}{Transmit / Receive}{ - Versenden und Empfangen von Signalen}
-\acro{TXD}{}
-\acro{UART}{}
-\acro{VCC}{Voltage at the common collector} {- Versorgungsspannung}
-\acro{WLAN}{Wireless Local Area Network}{ - engl. auch WiFi - kabellose Netzwerkverbindung}
+\acro{MIMO}{\textbf{M}ultiple \textbf{I}nput \textbf{M}ultiple \textbf{O}utput}{ - Nutzung mehrerer Sende- und Empfangsantennen}
+\acro{P2P}{\textbf{P}eer to \textbf{P}eer}{ - Direkte Endgerät zu Endgerät Kommunikation}
+\acro{PLL}{\textbf{P}hase-\textbf{L}ocked \textbf{L}oop}{ - Damit ein konstantes abgeleitetes Signal zwischen einem äußeren Referenzsignal und Oszillator entsteht, wird solch eine Phasenregelschleife verwendet} 
+\acro{RXD}{\textbf{R}eceive \textbf{D}ata}{ - Eingehende Leitung für Daten}
+\acro{soft-AP}{\textbf{soft}ware enabled \textbf{A}ccess \textbf{P}oint}{ - ein über Software erstellter Access Point, welcher auf einem Gerät erzeugt wird welches nicht speziell als Router gedacht ist}
+\acro{SDIO}{\textbf{S}ecure \textbf{D}igital \textbf{I}nput \textbf{O}utput}{ - SD-Interface um Peripheriegeräte (z.B. Webcam, GPS, Ethernet, ...) anzusprechen}
+\acro{SPI}{\textbf{S}erial \textbf{P}eripheral \textbf{I}nterface}{ - Synchroner serieller Datenbus}
+\acro{SoC}{\textbf{S}ystem-\textbf{o}n-a-\textbf{C}hip}{ - Integration aller Systeme in einem Chip / einem Bauteil}
+\acro{STBC}{\textbf{S}pace \textbf{T}ime \textbf{B}lock \textbf{C}oding}{ - Übertragungsverfahren in Funknetzwerken um mehrfach Daten über mehrere Antennen verteilt zu versenden}
+\acro{T/R}{\textbf{T}ransmit / \textbf{R}eceive}{ - Versenden und Empfangen von Signalen}
+\acro{TXD}{\textbf{T}ransmit \textbf{D}ata}{ - Ausgehende Leitung für Daten}
+\acro{UART}{\textbf{U}niversal \textbf{A}synchronous \textbf{R}eceiver \textbf{T}ransmitter} { - digitale serielle Schnittstelle mit einem speziellen Protokoll}
+\acro{VCC}{\textbf{V}oltage at the \textbf{C}ommon \textbf{C}ollector} { - Versorgungsspannung}
+\acro{WLAN}{\textbf{W}ireless \textbf{L}ocal \textbf{A}rea \textbf{N}etwork}{ - engl. auch WiFi - kabellose Netzwerkverbindung}
 \end{acronym}
 \end{appendix}
 
