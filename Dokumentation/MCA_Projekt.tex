@@ -84,24 +84,24 @@ In der \autoref{fig:ESP8266} ist ein ESP8266 mit dem dazugehörigen Pinlayout da
 Die Programmierung des Mikrocontrollers kann mit der Arduino IDE\footnote{\url{https://www.arduino.cc/} ; Stand: \today} erfolgen. Hierzu muss das Community Package esp8266 installiert sein, welches zusätzliche Header und Funktionen, sowie Compiler und Programmierdefinitionen beinhaltet.
 In der IDE kann mit einer C/C++-Syntax programmiert werden, wobei der Compiler einige, aber nicht alle Befehlssätze des C++11 Standards unterstützt.
 
-Weiterhin wird der ESP8266 über die \acs(TXD)- und \acs(RXD)-Leitungen mit Hilfe des \acs{UART}-Protokolls programmiert.
+Weiterhin wird der ESP8266 über die \acs{TXD}- und \acs{RXD}-Leitungen mit Hilfe des \acs{UART}-Protokolls programmiert.
 Damit der Controller in den Programmiermodus wechselt, muss beim Start der \acs{GPIO}\_0 auf Masse liegen (Controller startet im Programmiermodus).
 Anschließend kann die durch Cross-Compiling erzeugte Binary von der Arduino IDE an den ESP8266 übertragen werden.
 Für die Programmierung bieten sich beispielsweise sogenannte USB-to-\acs{UART}-Programmierkabel an (z.B. der PL2303).
 Hierbei ist zu beachten, dass die Spannungsversorgung am Ausgang der meisten Programmierkabel 5V und nicht 3.3V beträgt. Der Mikrocontroller ist nicht 5V tolerant.
 
-\subsection{Funktionsweise Infrarot}
+\subsection{Funktionsweise Fernbedienung}
 %TODO Ausreichend?
-Damit eine WLAN-gesteuerte Infrarotfernbedingung realisiert werden kann, müssen zunächst die Grundlagen einer solchen Fernbedingung kurz erklärt werden.
+%Damit eine WLAN-gesteuerte Infrarotfernbedingung realisiert werden kann, müssen zunächst die Grundlagen einer solchen Fernbedingung kurz erklärt werden.
 
-Eine Infrarot-Fernbedienung sendet über eine Infrarotleuchtdiode ein Signal im Infrarotbereich.
-Dieses Signal wird mit einer bestimmten Trägerfrequenz gesendet.
-Viele Fernbedingungen arbeiten beispielsweise mit einer Trägerfrequenz von 38kHz.
-Es existieren aber Fernbedingungen, welche andere Frequenzen nutzen.
-In diesem Projekt wird eine Fernbedingung mit 38kHz realisiert.
-Es ist wichtig sich auf eine Frequenz festzulegen, da die Frequenz Einfluss auf Bauteile und Programmierung hat.
+Eine übliche Infrarot-Fernbedienung sendet ein Signal welches bei den meisten Herstellern von Fernsehern auf eine Trägerfrequenz von 36 - 38 kHz moduliert ist.
+%Dieses Signal wird mit einer bestimmten Trägerfrequenz gesendet.
+%Viele Fernbedingungen arbeiten beispielsweise mit einer Trägerfrequenz von 38kHz.
+%Es existieren aber Fernbedingungen, welche andere Frequenzen nutzen.
+In diesem Projekt wird eine Fernbedingung mit 38kHz realisiert. Bei genügend hoher Toleranz können hiermit aber auch Empfänger gesteuert werden welche ein 36 kHz Signal erwarten.
+Es ist jedoch wichtig sich auf eine Frequenz festzulegen, da die Frequenz Einfluss auf Bauteile und Programmierung hat.
 
-Über eine \textbf{P}uls-\textbf{W}eiten-\textbf{M}odulation (PWM) auf der Trägerfrequenz wird das codierte Signal übertragen.
+Über eine \ac{PWM} auf der Trägerfrequenz wird das codierte Signal übertragen.
 Jede Taste auf einer Fernbedingung besitzt eine eigene Codierung.
 Weiterhin existieren verschiedene Protokolle zur Codierung von Signalen.
 Die Protokolle werden in diesem Projekt vernachlässigt, da die Codierung im Wesentlichen nur kopiert und gespeichert wird.
@@ -112,7 +112,9 @@ Ein Infrarotempfänger besteht aus einer Fotodiode, einem geregeltem Verstärker
 Der Demodulator sendet das digital codierte Signal an den Mikrocontroller.
 Weiterhin besitzt der integrierte Schaltkreis einen Bandpassfilter um Störungen von anderen Frequenzen als der gewünschten Frequenz zu vermeiden.
 Meist sind Fotodiode und Schaltkreis in einem Kunststoffgehäuse integriert.
-Der TSOP4836 ist zum Beispiel solch ein Empfänger für die Trägerfrequenz von 38kHz.
+Wir haben uns für den TSOP4836 entschieden, da dieser auf 38 kHz abgestimmt ist. Weitere Trägerfrequenzen sind in gleicher Bauform erhältlich.
+
+Datenblatt: \url{http://mkpochtoi.narod.ru/TSOP4836_ds.pdf}
 
 Auf die konkreten Details zu PWM wird in dieser Dokumentation nicht eingegangen.
 
@@ -131,31 +133,31 @@ Die \autoref{fig:Schalplan} zeigt den Schaltplan für die Realisierung einer Inf
 \end{figure}
 
 Für die Programmierung des Mikrocontrollers wird ein USB-to-UART-Programmierer (PL2303) verwendet.
-Dieser liefert an VCC 5V.
-Der ESP8266 selbst benötigt 3,3V und ist nicht 5V tolerant, sodass ein fester Spannungsregler verwendet wird um 3,3V für den Mikrocontroller zur Verfügung zu stellen.
+Dieser liefert an VCC 5V. Wird er ohne PC betrieben kann er über ein einfaches 5V USB Netzteil auch als Zuleitung verwendet werden. Die TX und RX-Leitungen liegen dann auf 0V.
+Der ESP8266 selbst benötigt 3,3V und ist nicht 5V tolerant, sodass ein Festspannungsregler verwendet wird um 3,3V für den Mikrocontroller zur Verfügung zu stellen.
 Als Spannungsregler bietet sich zum Beispiel der LM1117-3V3\footnote{\url{http://www.ti.com/lit/ds/symlink/lm1117.pdf} ; Stand: \today} (verwendet) oder ein L7805 an.
 Der Spannungsregler ist im Schaltplan als 78XX dargestellt.
-Zur Spannungsstabilisierung besitzt der Spannungsregler zwischen dem 3,3V-Ausgang und Masse einen 10$\mu$F-Kondensator.
+Zur Spannungsstabilisierung wird dem Regler ein 100 nF Kondensator vor und ein Masse einen 10$\mu$F-Kondensator nachgeschaltet.
 
 Nun wird für den ESP8266 die benötigte Spannung von 3,3V bereitgestellt.
-Die Pins VCC und CH\_PD (Chip Power Down) werden mit der Spannungsquelle 3,3V verbunden und GND entsprechend auf Masse gelegt.
-Der RST-Pin (Reset) wird mit einem Taster verbunden, welcher bei betätigen diesen Pin auf Masse zieht (interner Pull Up) und somit den Mikrocontroller zurücksetzt.
+Die Pins \acs{VCC} und \ac{CH\_PD} werden mit der Spannungsquelle 3,3V verbunden und \ac{GND} entsprechend auf Masse gelegt.
+Der \ac{RST}-Pin wird mit einem Taster verbunden, welcher bei betätigen diesen Pin auf Masse zieht (interner Pull Up) und somit den Mikrocontroller zurücksetzt.
 
-Das ESP8266-Modul besitzt 2 Digitale Ein beziehungsweise Ausgänge. GPIO\_0 benutzen wir als Ausgang und GPIO\_2 benutzen wir als Eingang.
+Das ESP8266-Modul besitzt 2 Digitale Ein beziehungsweise Ausgänge. \acs{GPIO}\_0 benutzen wir als Ausgang und \acs{GPIO}\_2 benutzen wir als Eingang.
 Wie diese Pins arbeiten wird bei der Programmierung festgelegt.
 
-An dem GPIO\_0 ist ein DIP-Schalter angeschlossen.
+An dem {GPIO}\_0 ist ein DIP-Schalter angeschlossen.
 Dieser dient dazu zwischen dem Programmiermodus und dem normalen Modus zu Wechseln.
 Der Pin ist Low-Aktiv, sodass für den normalen Betrieb und nach einem Reset immer 3,3V anliegen muss.
-Für das Programmieren wird dieser PIN auf Masse gezogen in dem der Schalter entsprechend gesetzt wird und ein Reset ausgeführt wird.
+Für das Programmieren wird dieser Pin auf Masse gezogen in dem der Schalter entsprechend gesetzt wird und ein Reset ausgeführt wird.
 Andernfalls ist der DIP-Schalter mit einer Infrarotdiode (1,5V, 80mA) inklusive Vorwiederstand(22 Ohm) verbunden.
 Die Diode und der Widerstand sind mit der 3,3V Spannungsquelle verbunden.
 Diese Diode dient später dazu die Infrarotsignale zu senden.
 
-Der GPIO\_0 2 wird mit dem Infrarotempfänger verbunden und dient zur Erfassung der Infrarot-Signale.
+Der \acs{GPIO}\_0 2 wird mit dem Infrarotempfänger verbunden und dient zur Erfassung der Infrarot-Signale.
 Der Infrarotempfänger wird entsprechend mit der 3,3V Spannungsquelle und der Masse verbunden.
 
-Aufgrund das Senden und Empfangen nicht gleichzeitig möglich sind, bedarf es keiner Abschirmung zwischen Sender und Empfänger.
+Aufgrund dessen, dass Senden und Empfangen nicht gleichzeitig möglich sind, bedarf es keiner Abschirmung zwischen Sende und Empfangsdiode. Es wird über die Programmierung sichergestellt das der Sender während des erwarteten Aufnehmens von Signalen nicht Leuchtet (Ausgang liegt auf High).
 
 Die \autoref{fig:Steckplatine} zeigt den Aufbau auf einer Steckplatine.
 
@@ -175,11 +177,11 @@ Die \autoref{fig:Steckplatine} zeigt den Aufbau auf einer Steckplatine.
 %TODO erklären ?? Wie funktioniert das?
 \subsubsection{Infrarotsignale Senden}
 Damit Infrarotsignale mit einer Trägerfrequenz von 38kHz gesendet werden, bedarf es einem Trick in der Programmierung um dies zu realisieren.
-Dies geschieht in dem der digitale Ausgang GPIO\_2 zwischen einer logischen 1 und 0 alterniert.
+Dies geschieht in dem der digitale Ausgang \acs{GPIO}\_2 zwischen einer logischen 1 und 0 alterniert.
 Die Länge des Pulses beschreibt den gesendeten Befehl an den Infrarotempfänger.
 
 Dies kann mit Hilfe eines $\mu$s-delay Befehl realisiert werden.
-Jeder Puls ist 1/38000 Sekunden (26,3 $\mu$s) lang.
+Jeder Puls ist 1/38000 Sekunden (26,3 $\mu$s) lang. Die restlichen 0.3 $\mu$s werden ca. von den Ansteuerungfunktionen für das Wechseln zwischen HIGH und LOW des Ausgangs so wie der Schleife verwendet.
 Gerundet auf 26 $\mu$s ist die Modulationsfrequenz realisierbar mit:
 %TODO Pseudocode wenn fertig
 
@@ -190,20 +192,17 @@ Gerundet auf 26 $\mu$s ist die Modulationsfrequenz realisierbar mit:
 %TODO Vervollständigen
 \section{Fazit}
 
-Im Verlaufe des Projektes ist eine über ein drahtloses Netzwerk steuerbare Mikrocontroller-Anwendung entstanden, welcher in einem heimischen Netzwerk verwendet werden kann.
+Im Verlaufe des Projektes ist ein über ein drahtloses Netzwerk steuerbare Mikrocontroller-Anwendung entstanden, welcher in einem heimischen Netzwerk verwendet werden kann.
 
 Erworbene Fertigkeiten:
 \begin{itemize}
 	\item Programmierung in einer Arduino IDE inklusive entsprechender Konfiguration der IDE
-	\item Programmierung in C/C++ ähnlicher Sprache
+	\item Programmierung in C/C++
 	\item Umgang mit dem ESP8266
 	\item Erworbenes Verständnis für die Funktionsweise von Infrarotsendern und Empfängern
 \end{itemize} 
 
-Es ist in der gewählten Realisierung nicht möglich Stromsparmaßnahmen des Mikrocontrollers zu verwenden.
-Dies ist damit begründet, das die drahtlose Netzwerkverbindung permanent aufrecht gehalten werden muss.
-Verwendung von Stromsparmaßnahmen würde dazu führen, dass das Modul die Verbindung zum Netzwerk verliert und anschließend nicht erreichbar ist.
-Begründet ist dies damit, da die Steuerung über den Webserver des Moduls erfolgt.
+Es ist in der gewählten Realisierung nicht möglich die Stromsparmaßnahmen des Mikrocontrollers zu verwenden, da hierbei die WLAN Eigenschaften unterbrochen werden. Der Mikrocontroller kann dann nicht auf einkommende Anfragen reagieren und diese laufen in einen Timeout.
 
 Der Quellcode für das Projekt ist auf GitHub verfügbar unter:\\ \url{https://github.com/Ava-chan/IOT_IR_Remote}\footnote{Stand: \today}
 
@@ -217,14 +216,17 @@ Der Quellcode für das Projekt ist auf GitHub verfügbar unter:\\ \url{https://g
 \acro{A-MPDU}{\textbf{A}ggregated \textbf{M}ac \textbf{P}rotocol \textbf{D}ata \textbf{U}nit}{ - Eine Funktion im Wlan-Standard 802.11e und 802.11n um bei einer einzelne Übertragung mehrere Pakete zu senden}
 \acro{A-MSDU}{\textbf{A}ggregated \textbf{M}ac \textbf{S}ervice \textbf{D}ata}{ - Eine Funktion im Wlan-Standard 802.11e und 802.11n um bei einer einzelne Übertragung mehrere Pakete zu senden}
 \acro{balun}{\textbf{bal}anced-\textbf{un}balanced}{ - Wandler zwischen symmetrischen und unsymmetrischen Leistungssystemen}
+\acro {CH\_PD} {Chip Power Down}
 \acro{DCXO}{\textbf{D}igitally \textbf{C}ontrolled \textbf{O}scillator}{ - digital gesteuerter Quarzoszillator}
 \acro{DTIM3}{\textbf{D}elivery \textbf{T}raffic \textbf{I}ndication \textbf{M}essage}{- regelmäßiger Broadcast des Access Point um Wireless-Stationen aufzuwecken}
+\acro{GND}{Ground}
 \acro{GPIO}{\textbf{G}eneral \textbf{P}urpose \textbf{I}nput \textbf{O}utput}{ - Durch logische Programmierung kann PIN Verhalten als Eingang oder Ausgang definiert werden}
 \acro{IoT}{\textbf{I}nternet \textbf{o}f \textbf{T}hings}{ - \qq{intelligente Gegenstände} unterstützen Menschen unmerklich}
 \acro{LNA}{\textbf{L}ow \textbf{N}oise \textbf{A}mplifier}{ - Rausch armer Verstärker}
 \acro{MIMO}{\textbf{M}ultiple \textbf{I}nput \textbf{M}ultiple \textbf{O}utput}{ - Nutzung mehrerer Sende- und Empfangsantennen}
 \acro{P2P}{\textbf{P}eer to \textbf{P}eer}{ - Direkte Endgerät zu Endgerät Kommunikation}
 \acro{PLL}{\textbf{P}hase-\textbf{L}ocked \textbf{L}oop}{ - Damit ein konstantes abgeleitetes Signal zwischen einem äußeren Referenzsignal und Oszillator entsteht, wird solch eine Phasenregelschleife verwendet} 
+\acro{PWM}{\textbf{P}uls-\textbf{W}eiten-\textbf{M}odulation}
 \acro{RXD}{\textbf{R}eceive \textbf{D}ata}{ - Eingehende Leitung für Daten}
 \acro{soft-AP}{\textbf{soft}ware enabled \textbf{A}ccess \textbf{P}oint}{ - ein über Software erstellter Access Point, welcher auf einem Gerät erzeugt wird welches nicht speziell als Router gedacht ist}
 \acro{SDIO}{\textbf{S}ecure \textbf{D}igital \textbf{I}nput \textbf{O}utput}{ - SD-Interface um Peripheriegeräte (z.B. Webcam, GPS, Ethernet, ...) anzusprechen}
