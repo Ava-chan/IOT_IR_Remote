@@ -1,5 +1,6 @@
-\input{Header/Header}						
-
+\input{Header/Header}			
+\usepackage{tikz}			
+\usetikzlibrary{shapes,arrows} %PAP
 \begin{document}
 
 
@@ -114,20 +115,33 @@ Weiterhin besitzt der integrierte Schaltkreis einen Bandpassfilter um Störungen
 Meist sind Fotodiode und Schaltkreis in einem Kunststoffgehäuse integriert.
 Wir haben uns für den TSOP4836 entschieden, da dieser auf 38 kHz abgestimmt ist. Weitere Trägerfrequenzen sind in gleicher Bauform erhältlich.
 
-Datenblatt: \url{http://mkpochtoi.narod.ru/TSOP4836_ds.pdf}
+Datenblatt: \url{http://mkpochtoi.narod.ru/TSOP4836_ds.pdf}\footnote{Stand: \today}
 
 Auf die konkreten Details zu PWM wird in dieser Dokumentation nicht eingegangen.
 
 \section{Realisierung}
 Nachdem die Grundlagen für das Projekt betrachtet wurden, soll nun die konkrete Realisierung des Projektes verdeutlicht werden.
+\subsection{Komponentenliste}
+%TODO Liste
+Für die Realisierung des Projektes werden folgenden Komponenten benötigt:
+\begin{itemize}
+	\item Der Mikrocontroller: ESP8266
+	\item Ein Spannungsregler: LM1117-3V3
+	\item Infrarotleuchtdiode: 1,5V / 80mA
+	\item Vorwiderstand für Diode: 22 Ohm
+	\item Infrarotempfänger: TSOP4836 für die Trägerfrequenz 38kHz
+	\item USB-to-UART-Programmierer: PL2303
+\end{itemize}
+
 
 \subsection{Aufbau}
 %TODO Vollständig?
-Die \autoref{fig:Schalplan} zeigt den Schaltplan für die Realisierung einer Infrarot-Fernbedingung inklusive Empfänger.
+
+Die \autoref{fig:Schalplan} zeigt den Schaltplan für die Realisierung einer Infrarotfernbedingung inklusive Empfänger.
 
 \begin{figure}
 	\centering
-	\includegraphics[scale=1]{Abbildungen/ESP8266_Schaltplan}
+	\includegraphics[scale=1.4]{Abbildungen/ESP8266_Schaltplan}
 	\caption{Schaltplan}
 	\label{fig:Schalplan}
 \end{figure}
@@ -140,8 +154,8 @@ Der Spannungsregler ist im Schaltplan als 78XX dargestellt.
 Zur Spannungsstabilisierung wird dem Regler ein 100 nF Kondensator vor und ein Masse einen 10$\mu$F-Kondensator nachgeschaltet.
 
 Nun wird für den ESP8266 die benötigte Spannung von 3,3V bereitgestellt.
-Die Pins \acs{VCC} und \ac{CH\_PD} werden mit der Spannungsquelle 3,3V verbunden und \ac{GND} entsprechend auf Masse gelegt.
-Der \ac{RST}-Pin wird mit einem Taster verbunden, welcher bei betätigen diesen Pin auf Masse zieht (interner Pull Up) und somit den Mikrocontroller zurücksetzt.
+Die Pins \acs{VCC} und \acs{CHPD} werden mit der Spannungsquelle 3,3V verbunden und \ac{GND} entsprechend auf Masse gelegt.
+Der \acs{RST}-Pin wird mit einem Taster verbunden, welcher bei betätigen diesen Pin auf Masse zieht (interner Pull Up) und somit den Mikrocontroller zurücksetzt.
 
 Das ESP8266-Modul besitzt 2 Digitale Ein beziehungsweise Ausgänge. \acs{GPIO}\_0 benutzen wir als Ausgang und \acs{GPIO}\_2 benutzen wir als Eingang.
 Wie diese Pins arbeiten wird bei der Programmierung festgelegt.
@@ -169,12 +183,61 @@ Die \autoref{fig:Steckplatine} zeigt den Aufbau auf einer Steckplatine.
 \end{figure}
 
 
+
 \subsection{Implementierung}
-%TODO Programmablaufplan
+%TODO vervollständigen
+Ein Programm für den ESP8266 besteht aus 2 Teilen.
+Diese 2 Teile sind jeweils definiert durch die Funktionen \texttt{setup()} (Initialisierung des Mikrocontrollers) und \texttt{loop()} (Schleife).
+
+In der Funktion \texttt{setup} werden Befehle ausgeführt, welche beim Starten des Mikrocontrollers aufgerufen werden sollen.
+Zum Beispiel ist es möglich im Setup eine Verbindung zum einem drahtlosen Netzwerk herzustellen und Serverfunktionalität bereitzustellen.
+Nach Abschluss des Setups gelangt der Mikrocontroller in die \texttt{loop}-Funktion.
+Diese Funktion wird beständig immer wieder aufgerufen und entsprechende entsprechende Befehle in der Funktion ausgeführt.
+Zum Beispiel wird an dieser Stelle geprüft ob ein Client eine Anfrage an den Mikrocontroller gesendet hat.
+Falls ja, werden die entsprechenden Funktionen ausgeführt.
+
+\subsubsection{Programmablaufplan}
+%Erster Test ob PAP in Latex möglich ist, muss natürlich noch entsprechend unser Programm abbilden
+%TODO PAP für setup und PAP für loop (übersichtlicher, wenn getrennt)
+%beispiel: http://www.texample.net/tikz/examples/simple-flow-chart/
+
+% Define block styles
+\tikzstyle{decision} = [diamond, draw, fill=blue!20, 
+    text width=4.5em, text badly centered, node distance=3cm, inner sep=0pt]
+\tikzstyle{block} = [rectangle, draw, fill=blue!20, 
+    text width=5em, text centered, rounded corners, minimum height=4em]
+\tikzstyle{line} = [draw, -latex']
+\tikzstyle{cloud} = [draw, ellipse,fill=red!20, node distance=3cm,
+    minimum height=2em]
+
+\begin{center} 
+\begin{tikzpicture}[node distance = 2cm, auto]
+    % Place nodes
+    \node [block] (init) {initialize model};
+    \node [cloud, left of=init] (expert) {expert};
+    \node [cloud, right of=init] (system) {system};
+    \node [block, below of=init] (identify) {identify candidate models};
+    \node [block, below of=identify] (evaluate) {evaluate candidate models};
+    \node [block, left of=evaluate, node distance=3cm] (update) {update model};
+    \node [decision, below of=evaluate] (decide) {is best candidate better?};
+    \node [block, below of=decide, node distance=3cm] (stop) {stop};
+    % Draw edges
+    \path [line] (init) -- (identify);
+    \path [line] (identify) -- (evaluate);
+    \path [line] (evaluate) -- (decide);
+    \path [line] (decide) -| node [near start] {yes} (update);
+    \path [line] (update) |- (identify);
+    \path [line] (decide) -- node {no}(stop);
+    \path [line,dashed] (expert) -- (init);
+    \path [line,dashed] (system) -- (init);
+    \path [line,dashed] (system) |- (evaluate);
+\end{tikzpicture}
+\end{center}
+
 %TODO Noch zu vervollständigen
 
 \subsubsection{Infrarotsignale Empfangen}
-%TODO erklären ?? Wie funktioniert das?
+%TODO erklären ?? Wie funktioniert das? (Eike)
 \subsubsection{Infrarotsignale Senden}
 Damit Infrarotsignale mit einer Trägerfrequenz von 38kHz gesendet werden, bedarf es einem Trick in der Programmierung um dies zu realisieren.
 Dies geschieht in dem der digitale Ausgang \acs{GPIO}\_2 zwischen einer logischen 1 und 0 alterniert.
@@ -216,7 +279,7 @@ Der Quellcode für das Projekt ist auf GitHub verfügbar unter:\\ \url{https://g
 \acro{A-MPDU}{\textbf{A}ggregated \textbf{M}ac \textbf{P}rotocol \textbf{D}ata \textbf{U}nit}{ - Eine Funktion im Wlan-Standard 802.11e und 802.11n um bei einer einzelne Übertragung mehrere Pakete zu senden}
 \acro{A-MSDU}{\textbf{A}ggregated \textbf{M}ac \textbf{S}ervice \textbf{D}ata}{ - Eine Funktion im Wlan-Standard 802.11e und 802.11n um bei einer einzelne Übertragung mehrere Pakete zu senden}
 \acro{balun}{\textbf{bal}anced-\textbf{un}balanced}{ - Wandler zwischen symmetrischen und unsymmetrischen Leistungssystemen}
-\acro {CH\_PD} {Chip Power Down}
+\acro{CHPD}{\textbf{C}hip \textbf{P}ower \textbf{D}own}{ -Der Chip kann mit Hilfe dieses Pins vollständig heruntergefahren werden}
 \acro{DCXO}{\textbf{D}igitally \textbf{C}ontrolled \textbf{O}scillator}{ - digital gesteuerter Quarzoszillator}
 \acro{DTIM3}{\textbf{D}elivery \textbf{T}raffic \textbf{I}ndication \textbf{M}essage}{- regelmäßiger Broadcast des Access Point um Wireless-Stationen aufzuwecken}
 \acro{GND}{Ground}
@@ -227,6 +290,7 @@ Der Quellcode für das Projekt ist auf GitHub verfügbar unter:\\ \url{https://g
 \acro{P2P}{\textbf{P}eer to \textbf{P}eer}{ - Direkte Endgerät zu Endgerät Kommunikation}
 \acro{PLL}{\textbf{P}hase-\textbf{L}ocked \textbf{L}oop}{ - Damit ein konstantes abgeleitetes Signal zwischen einem äußeren Referenzsignal und Oszillator entsteht, wird solch eine Phasenregelschleife verwendet} 
 \acro{PWM}{\textbf{P}uls-\textbf{W}eiten-\textbf{M}odulation}
+\acro{RST}{Reset}{ -Setzt den Controller zurück, sodass dieser einen Neustart durchführt}
 \acro{RXD}{\textbf{R}eceive \textbf{D}ata}{ - Eingehende Leitung für Daten}
 \acro{soft-AP}{\textbf{soft}ware enabled \textbf{A}ccess \textbf{P}oint}{ - ein über Software erstellter Access Point, welcher auf einem Gerät erzeugt wird welches nicht speziell als Router gedacht ist}
 \acro{SDIO}{\textbf{S}ecure \textbf{D}igital \textbf{I}nput \textbf{O}utput}{ - SD-Interface um Peripheriegeräte (z.B. Webcam, GPS, Ethernet, ...) anzusprechen}
