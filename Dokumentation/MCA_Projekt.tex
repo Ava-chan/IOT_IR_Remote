@@ -197,41 +197,48 @@ Zum Beispiel wird an dieser Stelle geprüft ob ein Client eine Anfrage an den Mi
 Falls ja, werden die entsprechenden Funktionen ausgeführt.
 
 \subsubsection{Programmablaufplan}
-%Erster Test ob PAP in Latex möglich ist, muss natürlich noch entsprechend unser Programm abbilden
-%TODO PAP für setup und PAP für loop (übersichtlicher, wenn getrennt)
+%TODO PAP für loop (übersichtlicher, wenn getrennt)
 %beispiel: http://www.texample.net/tikz/examples/simple-flow-chart/
 
 % Define block styles
-\tikzstyle{decision} = [diamond, draw, fill=blue!20, 
+\tikzstyle{decision} = [diamond, draw, 
     text width=4.5em, text badly centered, node distance=3cm, inner sep=0pt]
-\tikzstyle{block} = [rectangle, draw, fill=blue!20, 
+\tikzstyle{block} = [rectangle, draw, 
     text width=5em, text centered, rounded corners, minimum height=4em]
 \tikzstyle{line} = [draw, -latex']
-\tikzstyle{cloud} = [draw, ellipse,fill=red!20, node distance=3cm,
+\tikzstyle{cloud} = [draw, ellipse, node distance=3cm,
     minimum height=2em]
 
 \begin{center} 
 \begin{tikzpicture}[node distance = 2cm, auto]
     % Place nodes
-    \node [block] (init) {initialize model};
-    \node [cloud, left of=init] (expert) {expert};
-    \node [cloud, right of=init] (system) {system};
-    \node [block, below of=init] (identify) {identify candidate models};
-    \node [block, below of=identify] (evaluate) {evaluate candidate models};
-    \node [block, left of=evaluate, node distance=3cm] (update) {update model};
-    \node [decision, below of=evaluate] (decide) {is best candidate better?};
-    \node [block, below of=decide, node distance=3cm] (stop) {stop};
+    \node [block] (init) {Start};
+    \node [block, below of=init] (confPin) {Konfiguriere GPIOs};
+    \node [cloud, left of=init] (setup) {Setup( )};
+    \node [block, below of=confPin] (readIR) {Lese Infrarot-\footnotemark};
+    \node [block, below of=readIR] (readWLAN) {Lese WLAN-\footnotemark[\value{footnote}]};
+    \node [block, below of=readWLAN] (connectWLAN) {Verbinde mit WLAN};
+    \node [decision, below of=connectWLAN] (decide) {Erfolgreich ?};
+   	\node [block, left of=decide, node distance=4cm] (startAP) {Starte als AP};
+    \node [block, below of=decide, node distance=3cm] (mDNS) {Starte \acs{mDNS}};
+ 	\node [block, below of=mDNS] (launch) {Starte Server};
+    \node [block, below of=launch] (ende) {Ende};
+    \node [cloud, right of=ende] (loop) {Loop( )};
     % Draw edges
-    \path [line] (init) -- (identify);
-    \path [line] (identify) -- (evaluate);
-    \path [line] (evaluate) -- (decide);
-    \path [line] (decide) -| node [near start] {yes} (update);
-    \path [line] (update) |- (identify);
-    \path [line] (decide) -- node {no}(stop);
-    \path [line,dashed] (expert) -- (init);
-    \path [line,dashed] (system) -- (init);
-    \path [line,dashed] (system) |- (evaluate);
+    \path [line] (init) -- (confPin);
+    \path [line] (confPin) -- (readIR);
+    \path [line] (readIR) -- (readWLAN);
+    \path [line] (readWLAN) -- (connectWLAN);
+    \path [line] (connectWLAN) -- (decide);
+	\path [line] (decide) -- node [near start] {Nein} (startAP);
+    \path [line] (startAP) |- (launch);
+    \path [line] (decide) -- node {Ja}(mDNS);
+    \path [line] (mDNS) -- (launch);
+    \path [line] (launch) -- (ende);
+    \path [line,dashed] (setup) -- (init);
+    \path [line,dashed] (ende) -- (loop);
 \end{tikzpicture}
+\footnotetext{Daten aus Speicher des ESP8266}
 \end{center}
 
 %TODO Noch zu vervollständigen
@@ -286,6 +293,7 @@ Der Quellcode für das Projekt ist auf GitHub verfügbar unter:\\ \url{https://g
 \acro{GPIO}{\textbf{G}eneral \textbf{P}urpose \textbf{I}nput \textbf{O}utput}{ - Durch logische Programmierung kann PIN Verhalten als Eingang oder Ausgang definiert werden}
 \acro{IoT}{\textbf{I}nternet \textbf{o}f \textbf{T}hings}{ - \qq{intelligente Gegenstände} unterstützen Menschen unmerklich}
 \acro{LNA}{\textbf{L}ow \textbf{N}oise \textbf{A}mplifier}{ - Rausch armer Verstärker}
+\acro{mDNS}{\textbf{m}ulticast \textbf{DNS}}{- Ist ein Konfigurationsloses Verfahren um Netzwerkadressen als Namen zu IP-Adressen aufzulösen, dieses Verfahren muss vom Client-System unterstützt werden}
 \acro{MIMO}{\textbf{M}ultiple \textbf{I}nput \textbf{M}ultiple \textbf{O}utput}{ - Nutzung mehrerer Sende- und Empfangsantennen}
 \acro{P2P}{\textbf{P}eer to \textbf{P}eer}{ - Direkte Endgerät zu Endgerät Kommunikation}
 \acro{PLL}{\textbf{P}hase-\textbf{L}ocked \textbf{L}oop}{ - Damit ein konstantes abgeleitetes Signal zwischen einem äußeren Referenzsignal und Oszillator entsteht, wird solch eine Phasenregelschleife verwendet} 
