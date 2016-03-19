@@ -14,6 +14,8 @@ MDNSResponder mDNS; //Apple service for easy providing url name , eventually not
 //not supported for Android(S5mini!?)
 ESP8266WebServer server(80);
 
+using namespace std;
+
 //AccessPoint IP: 192.168.4.1
 #define ssidAP "IOT_Remote"
 
@@ -27,23 +29,45 @@ const String html_meta_iphone = "<meta name = \"viewport\" content = \"width = d
 
 const int LEDPIN=0;
 const int IRINPUTPIN=2;
-const String srec_jumpback = "";
 
-std::vector<int> vec;
+class Station {
+  public:
+  String name;
+  vector<int> times;
+};
+
+vector<int> vec;
+vector<Station *> stations;
 
 String convertIPtoString(IPAddress adr){
      return (String(adr[0]) +"."+String(adr[1])+"."+String(adr[2]) +"."+String(adr[3]));
 }
  
 void handleRoot() {
-    String html = html_header + html_header_end
-    + "<div id=\"header\"> <h1>IOT_Remote</h1></div><br/>"
-    + "Network IP: " + convertIPtoString(WiFi.localIP()) + "<br/>"
-    + "AccessPoint IP: " + convertIPtoString(WiFi.softAPIP()) + "<br/>"
-    + "<br /><br /><div id=\"menu\"><ul><li><a href=\"/rec\">Record</a></li><li><a href=\"/send\">Send</a></li></ul><ul><li><a href=\"/configWireless\">Settings</a></li></ul>"
-    + html_footer;
-    server.send(200, "text/html", html);
-    return;
+  vec.clear();
+  String html = html_header + html_header_end
+  + "<div id=\"header\"> <h1>IOT_Remote</h1></div><br/>"
+  + "Network IP: " + convertIPtoString(WiFi.localIP()) + "<br/>"
+  + "AccessPoint IP: " + convertIPtoString(WiFi.softAPIP()) + "<br/><br/>"
+  + "Stations: " + stations.size() + "<br/><div id=\"menu\"><ul>";
+  for (int i = 0; i < stations.size(); i++) {
+    Station * station = stations[i];
+    html += "<li><a href=\"/send?id=";
+    html += i;
+    html += "\">" + station->name + "</a></li><br/>";
+    /*if (station->times.size() > 0) 
+    html += station->times[0];
+    html += ",";
+    if (station->times.size() > 1) 
+    html += station->times[1];
+    html += ",";
+    if (station->times.size() > 2) 
+    html += station->times[2];
+    html += "<br/>";*/
+  }
+  html += "</ul><br /><br /><ul><li><a href=\"/rec\">Record new</a></li><li><a href=\"/configWireless\">Settings</a></li></ul></div>" + html_footer;
+  server.send(200, "text/html", html);
+  return;
 }
 
 void handleNotFound(){
@@ -62,10 +86,98 @@ void handleNotFound(){
   return;
 }
 
+void saveRecord() {
+  String html = html_header + html_header_end
+  + "<div id=\"header\"><h1>Save Record</h1></div>"
+  + "<form action=\"/submitSave\" method=\"POST\" id=\"wform\"><div id=\"menu\"><ul>"
+  + "<li><a align=\"left\">Name:<br/><input style=\"width:100%;border:1px solid gray\" name=\"NAME\" autofocus length=5 /></li></a></ul>"
+  + "<ul><li><a href=\"#\" onclick=\"document.getElementById('wform').submit();\">Save</a></li><li><a href=\"index.html\">Cancel</a></li></ul></div></form>"
+  + html_footer;
+  server.send(200, "text/html", html);
+}
+
+void eepromwrite(int address, uint8_t value) {
+  EEPROM.write(address, uint8_t(0));
+  EEPROM.write(address, uint8_t(value));
+}
+
+void saveAllRecords() {
+  //Write Vector size
+  eepromwrite(150, uint8_t(stations.size()));
+    
+  //Write Vector Values
+  int writebyte = 151;
+  for(int stnr = 0; stnr < stations.size(); stnr ++) {
+    Station * station = stations[stnr];
+    eepromwrite(writebyte, uint8_t(station->name.length()));
+    writebyte++;
+    for (int j = 0; j < station->name.length(); ++j){
+      eepromwrite(writebyte, uint8_t(station->name[j]));
+      writebyte++;
+    }
+    eepromwrite(writebyte, uint8_t(station->times.size()));
+    writebyte++;
+    for (int j = 0; j < station->times.size(); ++j) {
+      int n = station->times[j];
+      char byte0 = (n >> 8) & 0xFF;
+      char byte1 = (n >> 0) & 0xFF;
+      eepromwrite(writebyte, uint8_t(byte0));
+      writebyte++;
+      eepromwrite(writebyte, uint8_t(byte1));
+      writebyte++;
+      //EEPROM.write(writebyte, 0);
+      //EEPROM.write(writebyte++, 2);
+    }
+  }
+  EEPROM.commit();
+}
+
+void submitSaveRecord() {
+    String response = "... Saving ";
+    if (server.args() > 0 ) {
+        Station *station = new Station();
+        station->name = server.arg(0);
+        response += station->name;
+        station->times = vec;
+        vec.clear();
+        stations.push_back(station);
+        saveAllRecords();
+    } else {
+      response += "failure";
+    }
+
+    response += " ...";
+    
+    String html = html_header;
+    html += "<meta http-equiv=\"refresh\" content=\"2; URL=/\">"; //Back to start page after 10 sec
+    html += html_header_end;
+    html += response;
+    html += html_footer;
+    server.send(200, "text/html", html);
+
+    return;
+}
+
+void clearAllRecords() {
+  EEPROM.write(150, 0);
+  EEPROM.write(150, 0);
+  EEPROM.commit();
+  stations.clear();
+    
+  String html = html_header;
+  html += "<meta http-equiv=\"refresh\" content=\"2; URL=/\">"; //Back to start page after 10 sec
+  html += html_header_end;
+  html += "cleared all stations";
+  html += html_footer;
+  server.send(200, "text/html", html);
+}
+
 void showRecord() {
   String html = html_header
-  + "<meta http-equiv=\"refresh\" content=\"3; URL=/index.html\">"
+  //+ "<meta http-equiv=\"refresh\" content=\"3; URL=/index.html\">"
   + html_header_end
+  + "<div id=\"header\"> <h1>IOT_Remote</h1></div><br/>"
+  + "<div id=\"menu\"><ul><li><a href=\"/sendTest\">Test</a></li></ul><ul><li><a href=\"/\">Discard</a></li><li><a href=\"/save\">Save</a></li></ul></div>"
   + "Here comes the record: <br />";
   //TODO SHOW RECORD
   for (int i = 0; i < vec.size(); i++) {
@@ -76,13 +188,13 @@ void showRecord() {
   return;  
 }
 
-void sendRecord() {
-  String html = "";
-  html += html_header;
-  html += "<meta http-equiv=\"refresh\" content=\"3; URL=/index.html\">";
-  html += html_header_end;
-  html += "Send record<br />";
-  html += html_footer;
+void sendTestRecord() {
+  String html = html_header
+  + "<meta http-equiv=\"refresh\" content=\"3; URL=/show\">"
+  + html_header_end
+  + "<div id=\"header\"> <h1>IOT_Remote</h1></div><br/>"
+  + "Send record<br />"
+  + html_footer;
   server.send(200, "text/html", html);
   for (int k = 0; k < 5; k++){
     int v = 0;
@@ -110,12 +222,51 @@ void sendRecord() {
   return;
 }
 
+void sendRecord() {
+  String html = html_header
+  + "<meta http-equiv=\"refresh\" content=\"2; URL=/\">"
+  + html_header_end
+  + "<div id=\"header\"> <h1>IOT_Remote</h1></div><br/>";
+  if (server.args() > 0 ) {
+    html += "Send record " + stations[server.arg(0).toInt()]->name + "<br />" + html_footer;
+    server.send(200, "text/html", html);
+    for (int k = 0; k < 5; k++){
+      int v = 0;
+      bool value = false;
+      for (int i = 0; i < 10000; i++) {
+        if (i == stations[server.arg(0).toInt()]->times[v]) {
+          v++;
+          value = !value;
+        }
+        if (value == true) {
+          digitalWrite(LEDPIN, HIGH);
+          delayMicroseconds(13);  //1M/38K/2
+          digitalWrite(LEDPIN, LOW);
+          delayMicroseconds(13);  //1M/38K/2
+        }
+        else {
+          digitalWrite(LEDPIN, HIGH);
+          delayMicroseconds(13);
+          digitalWrite(LEDPIN, HIGH);
+          delayMicroseconds(13);
+        }
+      }
+    }
+  } else {
+    html += "No Args" + html_footer;
+    server.send(200, "text/html", html);
+    
+  }
+  digitalWrite(LEDPIN, HIGH);
+  return;
+}
+
 int found_start = -1;
 
 void handleRecord() {
   String html = "";
   html += html_header
-  + "<meta http-equiv=\"refresh\" content=\"6; URL=/srec\">" //Back to start page after 5 sec
+  + "<meta http-equiv=\"refresh\" content=\"6; URL=/show\">" //Back to start page after 5 sec
   + html_header_end
   + "<div id=\"header\"> <h1>IOT_Remote</h1></div></br>Record now for 5 seconds"
   + html_footer;
@@ -192,13 +343,15 @@ void handleConfigWireless(){
     option += "</option>";
   }
     
-  String html = "";
-  html += html_header + html_header_end
-  + "<div id=\"header\"><h1>Settings</h1></div>"
+  String html = html_header + html_header_end
+  + "<div id=\"header\"><h1>Settings Wifi</h1></div>"
   + "<form action=\"/submitWireless\" method=\"POST\" id=\"wform\"><div id=\"menu\"><ul>"
   + "<li><a align=\"left\">SSID:<br/><div class=\"select_style\"/><select name=\"SSIDs\">" +option + "</select></div></a></li>"
   + "<li><a align=\"left\">Password: <br/><input type=\"password\" style=\"width:100%;border:1px solid gray\" name=\"PASSWORD\" autofocus length=64 /></li></a></ul>"
   + "<ul><li><a href=\"#\" onclick=\"document.getElementById('wform').submit();\">Submit</a></li><li><a href=\"index.html\">Back</a></li></ul></div></form>"
+  + "<br /><br /><br />"
+  + "<div id=\"header\"><h1>Other Settings</h1></div>"
+  + "<div id=\"menu\"><ul><li><a href=\"/clear\">Clear all stations</a></li></ul></div>"
   + html_footer;
   server.send(200, "text/html", html);
   
@@ -241,8 +394,12 @@ void launchWebsite() {
     server.on("/configWireless",handleConfigWireless);
     server.on("/submitWireless",handleSubmitWireless);
     server.on("/rec", handleRecord); 
-    server.on("/srec", showRecord);
+    server.on("/show", showRecord);
+    server.on("/clear", clearAllRecords);
+    server.on("/save", saveRecord);
     server.on("/send", sendRecord);
+    server.on("/submitSave", submitSaveRecord); 
+    server.on("/sendTest", sendTestRecord);
     //CSS Files
     server.on("/phone.css", sendPhoneCSS);
     //STD Handles
@@ -252,15 +409,45 @@ void launchWebsite() {
     return;
 }
 
-void setup() { 
+void loadStations() {
+  uint8_t stationcount = EEPROM.read(150);
+  
+  int readbyte = 151;
+  
+  for (uint8_t stnr = 0; stnr < stationcount; stnr ++) {
+    String name = "";
+    uint8_t namelength = EEPROM.read(readbyte++);
+    for (int i = 0; i < namelength; i++) {
+      name += char(EEPROM.read(readbyte++));
+    }
+    vector<int> times;
+    uint8_t timessize = EEPROM.read(readbyte++);
+    for (int i = 0; i < timessize; i++) {
+      uint8_t byte0 = EEPROM.read(readbyte++);
+      uint8_t byte1 = EEPROM.read(readbyte++);
+      int k = (int(byte0) << 8) + (int(byte1) << 0);
+      times.push_back(k);
+    }
+    Station *station = new Station();
+    station->name = name;
+    station->times = times;
+    stations.push_back(station);
+  }
+}
 
+void setup() { 
     //configure pins
     pinMode(LEDPIN, OUTPUT);
     digitalWrite(LEDPIN, LOW);
     pinMode(IRINPUTPIN, INPUT);
      
-    EEPROM.begin(512);
+    EEPROM.begin(2048);
     delay(10);
+
+
+    //Fill stations
+    stations.clear();
+    loadStations();
 
     //Read saved ssid from eeprom!
     String eSSID;
