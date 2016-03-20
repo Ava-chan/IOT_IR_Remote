@@ -39,6 +39,14 @@ class Station {
 vector<int> vec;
 vector<Station *> stations;
 
+/*****************************/
+/* GLOBAL USED STD FUNCTIONS */
+/*****************************/
+void eepromwrite(int address, uint8_t value) {
+  EEPROM.write(address, uint8_t(0));
+  EEPROM.write(address, uint8_t(value));
+}
+
 String convertIPtoString(IPAddress adr){
      return (String(adr[0]) +"."+String(adr[1])+"."+String(adr[2]) +"."+String(adr[3]));
 }
@@ -55,15 +63,6 @@ void handleRoot() {
     html += "<li><a href=\"/send?id=";
     html += i;
     html += "\">" + station->name + "</a></li><br/>";
-    /*if (station->times.size() > 0) 
-    html += station->times[0];
-    html += ",";
-    if (station->times.size() > 1) 
-    html += station->times[1];
-    html += ",";
-    if (station->times.size() > 2) 
-    html += station->times[2];
-    html += "<br/>";*/
   }
   html += "</ul><br /><br /><ul><li><a href=\"/rec\">Record new</a></li><li><a href=\"/configWireless\">Settings</a></li></ul></div>" + html_footer;
   server.send(200, "text/html", html);
@@ -96,11 +95,6 @@ void saveRecord() {
   server.send(200, "text/html", html);
 }
 
-void eepromwrite(int address, uint8_t value) {
-  EEPROM.write(address, uint8_t(0));
-  EEPROM.write(address, uint8_t(value));
-}
-
 void saveAllRecords() {
   //Write Vector size
   eepromwrite(150, uint8_t(stations.size()));
@@ -125,8 +119,6 @@ void saveAllRecords() {
       writebyte++;
       eepromwrite(writebyte, uint8_t(byte1));
       writebyte++;
-      //EEPROM.write(writebyte, 0);
-      //EEPROM.write(writebyte++, 2);
     }
   }
   EEPROM.commit();
@@ -159,8 +151,7 @@ void submitSaveRecord() {
 }
 
 void clearAllRecords() {
-  EEPROM.write(150, 0);
-  EEPROM.write(150, 0);
+  eepromwrite(150, 0);
   EEPROM.commit();
   stations.clear();
     
@@ -278,9 +269,9 @@ void handleSubmitWireless(){
     String response = "Something went wrong, try again.";
     if (server.args() > 0 ) {
         //clearing eeprom
-        for(uint8_t i = 0; i < 96; ++i){ 
+        /*for(uint8_t i = 0; i < 96; ++i){ 
             EEPROM.write(i, 0); 
-        }
+        }*/ //Replaced with EEPROMWRITE
         //write ssid and password in eeprom
         for(uint8_t i = 0; i < server.args(); i++ ){
             if(i==0){
@@ -289,7 +280,7 @@ void handleSubmitWireless(){
                 if(ssid.length() > 0 && ssid.length() <=32){
                     response= "SSID: " + ssid + " configured.<br/>Please restart to log into wireless network.<br/>";
                     for (uint8_t j = 0; j < ssid.length(); ++j){
-                        EEPROM.write(j, ssid[j]);
+                        eepromwrite(j, ssid[j]);
                     }
                 }
             }else if(i==1){
@@ -297,7 +288,7 @@ void handleSubmitWireless(){
                 //Only write data, if everything seems correct!
                 if(pass.length() > 0 && pass.length() <= 64){
                     for (uint8_t j = 0; j < pass.length(); ++j){
-                        EEPROM.write(32+j, pass[j]);
+                        eepromwrite(32+j, pass[j]);
                     }
                 }
             }else{
@@ -342,6 +333,14 @@ void handleConfigWireless(){
     option += ap_ssids[i];
     option += "</option>";
   }
+
+  int memory = 151;
+
+  for (int i = 0; i < stations.size(); i++) {
+    memory += 2;
+    memory += stations[i]->name.length();
+    memory += stations[i]->times.size() * 2;
+  }
     
   String html = html_header + html_header_end
   + "<div id=\"header\"><h1>Settings Wifi</h1></div>"
@@ -350,8 +349,11 @@ void handleConfigWireless(){
   + "<li><a align=\"left\">Password: <br/><input type=\"password\" style=\"width:100%;border:1px solid gray\" name=\"PASSWORD\" autofocus length=64 /></li></a></ul>"
   + "<ul><li><a href=\"#\" onclick=\"document.getElementById('wform').submit();\">Submit</a></li><li><a href=\"index.html\">Back</a></li></ul></div></form>"
   + "<br /><br /><br />"
-  + "<div id=\"header\"><h1>Other Settings</h1></div>"
-  + "<div id=\"menu\"><ul><li><a href=\"/clear\">Clear all stations</a></li></ul></div>"
+  + "<div id=\"header\"><h1>Resets</h1></div>"
+  + "<div id=\"menu\"><ul><li><a href=\"/clear\">Clear all stations</a></li></ul></div>" 
+  + "<br /><br /><br />"
+  + "<div id=\"header\"><h1>Statistics</h1></div><br/>"
+  + "EEPROM Memory usage: " + memory + " / 2048 byte"
   + html_footer;
   server.send(200, "text/html", html);
   
