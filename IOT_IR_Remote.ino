@@ -57,14 +57,18 @@ void handleRoot() {
   + "<div id=\"header\"> <h1>IOT_Remote</h1></div><br/>"
   + "Network IP: " + convertIPtoString(WiFi.localIP()) + "<br/>"
   + "AccessPoint IP: " + convertIPtoString(WiFi.softAPIP()) + "<br/><br/>"
-  + "Stations: " + stations.size() + "<br/><div id=\"menu\"><ul>";
+  + "Stations: " + stations.size() + "<br/><div id=\"menu\"><table width=\"100%\">";
   for (int i = 0; i < stations.size(); i++) {
+    if (i % 3 == 0) {
+      if (i > 0) html += "</tr>";
+      html += "<tr>";
+    }
     Station * station = stations[i];
-    html += "<li><a href=\"/send?id=";
+    html += "<td width=\"33%\"><ul><li><a href=\"/send?id=";
     html += i;
-    html += "\">" + station->name + "</a></li><br/>";
+    html += "\">" + station->name + "</a></li></ul></td>";
   }
-  html += "</ul><br /><br /><ul><li><a href=\"/rec\">Record new</a></li><li><a href=\"/configWireless\">Settings</a></li></ul></div>" + html_footer;
+  html += "</tr></table><br /><br /><ul><li><a href=\"/rec\">Record new</a></li><li><a href=\"/configWireless\">Settings</a></li></ul></div>" + html_footer;
   server.send(200, "text/html", html);
   return;
 }
@@ -219,13 +223,14 @@ void sendRecord() {
   + html_header_end
   + "<div id=\"header\"> <h1>IOT_Remote</h1></div><br/>";
   if (server.args() > 0 ) {
-    html += "Send record " + stations[server.arg(0).toInt()]->name + "<br />" + html_footer;
-    server.send(200, "text/html", html);
+    int nr = server.arg(0).toInt();
+    html += "Send record " + stations[nr]->name + "<br /><br />";
     for (int k = 0; k < 5; k++){
       int v = 0;
       bool value = false;
       for (int i = 0; i < 10000; i++) {
-        if (i == stations[server.arg(0).toInt()]->times[v]) {
+        if (i == stations[nr]->times[v]) {
+          html += stations[nr]->times[v] + ",";
           v++;
           value = !value;
         }
@@ -243,6 +248,8 @@ void sendRecord() {
         }
       }
     }
+    html += html_footer;
+    server.send(200, "text/html", html);
   } else {
     html += "No Args" + html_footer;
     server.send(200, "text/html", html);
@@ -353,7 +360,7 @@ void handleConfigWireless(){
   + "<div id=\"menu\"><ul><li><a href=\"/clear\">Clear all stations</a></li></ul></div>" 
   + "<br /><br /><br />"
   + "<div id=\"header\"><h1>Statistics</h1></div><br/>"
-  + "EEPROM Memory usage: " + memory + " / 2048 byte"
+  + "EEPROM Memory usage: " + memory + " / 4096 byte"
   + html_footer;
   server.send(200, "text/html", html);
   
@@ -367,7 +374,6 @@ void sendPhoneCSS () {
 }
 
 bool testWifi() {
- 
     for(int i = 0; i < 20;i++) {
         if (WiFi.status() == WL_CONNECTED){
             //Start Apple DNS Service to provide iot_remote.local adress in wireless network
@@ -443,7 +449,7 @@ void setup() {
     digitalWrite(LEDPIN, LOW);
     pinMode(IRINPUTPIN, INPUT);
      
-    EEPROM.begin(2048);
+    EEPROM.begin(4096);
     delay(10);
 
 
