@@ -64,6 +64,7 @@ Nachfolgend ist die Spezifikation eines ESP8266 laut Espressif\footnote{\url{htt
     \item Flash Größe: 512kB - 4MB 
 \end{itemize}
 
+
 Verfügbare Flash-Größe, Arbeitsspeicher und CPU-Frequenz sind Modell und Hersteller abhängig. Häufig wird die versendete Form innerhalb des online Angebots nicht genauer beschrieben.
 
 In der \autoref{fig:ESP8266} ist ein ESP8266 mit dem dazugehörigen Pinlayout dargestellt.
@@ -82,8 +83,8 @@ In der \autoref{fig:ESP8266} ist ein ESP8266 mit dem dazugehörigen Pinlayout da
 \end{figure}
 
 \subsection{Programmierung}
-Die Programmierung des Mikrocontrollers kann mit der Arduino IDE\footnote{\url{https://www.arduino.cc/} ; Stand: \today} erfolgen. Hierzu muss das Community Package esp8266 installiert sein, welches zusätzliche Header und Funktionen, sowie Compiler und Programmierdefinitionen beinhaltet.
-In der IDE kann mit einer C/C++-Syntax programmiert werden, wobei der Compiler einige, aber nicht alle Befehlssätze des C++11 Standards unterstützt.
+Die Programmierung des Mikrocontrollers kann mit der Arduino \acs{IDE}\footnote{\url{https://www.arduino.cc/} ; Stand: \today} erfolgen. Hierzu muss das Community Package esp8266 installiert sein, welches zusätzliche Header und Funktionen, sowie Compiler und Programmierdefinitionen beinhaltet.
+In der \acs{IDE} kann mit einer C/C++-Syntax programmiert werden, wobei der Compiler einige, aber nicht alle Befehlssätze des C++11 Standards unterstützt.
 
 Weiterhin wird der ESP8266 über die \acs{TXD}- und \acs{RXD}-Leitungen mit Hilfe des \acs{UART}-Protokolls programmiert.
 Damit der Controller in den Programmiermodus wechselt, muss beim Start der \acs{GPIO}\_0 auf Masse liegen (Controller startet im Programmiermodus).
@@ -194,6 +195,16 @@ Diese Funktion wird immer wieder aufgerufen und entsprechende Befehle in der Fun
 Zum Beispiel wird an dieser Stelle geprüft ob ein Client eine Anfrage an den Mikrocontroller gesendet hat.
 Falls ja, werden die entsprechenden Funktionen ausgeführt.
 
+Der ESP8266 besitzt einen \acs{EEPROM} von der Größe 4096Byte.
+Diese werden in der Implementierung wie folgt genutzt 
+\begin{itemize}
+	\item 0 - 96 = WLAN-Daten
+	\item 97 - 149 = Vorgehalten für weitere Einstellungen
+	\item 150 = Stationsanzahl bzw. Anzahl der gespeicherten Infrarotcodes
+	\item 151 - 4095 = Stationen bzw. Infrarotcodes
+\end{itemize}
+Die tatsächliche Länge von Infrarotcodes ist abhängig von den verwendeten Protokollen.
+
 \subsubsection{Setup}
 % Define block styles
 \tikzstyle{decision} = [diamond, draw, 
@@ -240,10 +251,9 @@ Falls ja, werden die entsprechenden Funktionen ausgeführt.
 \end{figure}
 
 Die \autoref{PAP:Setup} zeigt den Programmablaufplan für den Aufruf der Setup-Funktion.
-Beim starten des ESP8266 führt die Setup-Funktion folgende Schritte aus:
+Beim Starten des ESP8266 führt die Setup-Funktion folgende Schritte aus:\\
 Zunächst wird der \acs{GPIO}\_0 als Ausgabe und \acs{GPIO}\_2 als Eingabe-Pin festgelegt.
 Im Anschluss werden gespeicherte Infrarotcodes, auch als Stationen bezeichnet, aus dem \acs{EEPROM} gelesen.
-%TODO Speichergröße, wieviele Stationen usw.
 
 Nachdem die Infrarotcodes gelesen wurden, werden nun die drahtlosen Netzwerkdaten aus dem \acs{EEPROM} des ESP8266 gelesen.
 Mit diesen Daten wird versucht sich in das drahtlose Netzwerk einzubinden.
@@ -263,30 +273,18 @@ Den Zugriff und die dargestellten Websites des ESP8266 werden in der Loop-Funkti
 \begin{tikzpicture}[node distance = 2cm, auto, scale=0.8, every node/.style={scale=0.8}]
     % Place nodes
     \node [block] (init) {Start};
-    \node [block, below of=init] (confPin) {Konfiguriere GPIOs};
-    \node [cloud, left of=init] (setup) {Setup( )};
-    \node [block, below of=confPin, node distance=2.5cm] (readIR) {Lese Infrarot-Daten aus Speicher};
-    \node [block, below of=readIR, node distance=2.5cm] (readWLAN) {Lese WLAN-Daten aus Speicher};
-    \node [block, below of=readWLAN, , node distance=2.5cm] (connectWLAN) {Verbinde mit WLAN};
-    \node [decision, below of=connectWLAN] (decide) {Erfolgreich ?};
-   	\node [block, left of=decide, node distance=4cm] (startAP) {Starte als AP};
-    \node [block, below of=decide, node distance=3cm] (mDNS) {Starte \acs{mDNS}};
- 	\node [block, below of=mDNS] (launch) {Starte Server};
-    \node [block, below of=launch] (ende) {Ende};
-    \node [cloud, right of=ende] (loop) {Loop( )};
+    \node [cloud, left of=init] (loopStart) {Loop( )};
+    \node [decision, below of=init] (decide) {Anfrage Client ?};
+    \node [block, below of=decide, node distance=3cm] (end) {Ende};
+    \node [cloud, right of=end] (loopEnd) {Loop( )};
+    \node [block, left of=decide, node distance=4cm] (doSth) {doSth};
     % Draw edges
-    \path [line] (init) -- (confPin);
-    \path [line] (confPin) -- (readIR);
-    \path [line] (readIR) -- (readWLAN);
-    \path [line] (readWLAN) -- (connectWLAN);
-    \path [line] (connectWLAN) -- (decide);
-	\path [line] (decide) -- node [near start] {Nein} (startAP);
-    \path [line] (startAP) |- (launch);
-    \path [line] (decide) -- node {Ja}(mDNS);
-    \path [line] (mDNS) -- (launch);
-    \path [line] (launch) -- (ende);
-    \path [line,dashed] (setup) -- (init);
-    \path [line,dashed] (ende) -- (loop);
+    \path [line] (init) -- (decide);
+    \path [line,dashed] (loopStart) -- (init); 
+    \path [line] (decide) -- node [near start] {Nein} (end);
+    \path [line,dashed] (end) -- (loopEnd);
+    \path [line] (decide) -- node {Ja}(doSth);
+     \path [line] (doSth) -- (end);
 \end{tikzpicture}
 \caption{Programmablaufplan für Loop()}
 \label{PAP:Loop}
@@ -319,13 +317,13 @@ Im Verlaufe des Projektes ist ein über ein drahtloses Netzwerk steuerbare Mikro
 
 Erworbene Fertigkeiten:
 \begin{itemize}
-	\item Programmierung in einer Arduino IDE inklusive entsprechender Konfiguration der IDE
-	\item Programmierung in C/C++
+	\item Programmierung in einer Arduino \acs{IDE} inklusive entsprechender Konfiguration der \acs{IDE}
+	\item Programmierung eines ESP8266 in C/C++
 	\item Umgang mit dem ESP8266
 	\item Erworbenes Verständnis für die Funktionsweise von Infrarotsendern und Empfängern
 \end{itemize} 
 
-Es ist in der gewählten Realisierung nicht möglich die Stromsparmaßnahmen des Mikrocontrollers zu verwenden, da hierbei die WLAN Eigenschaften unterbrochen werden. Der Mikrocontroller kann dann nicht auf einkommende Anfragen reagieren und diese laufen in einen Timeout.
+Es ist in der gewählten Realisierung nicht möglich die Stromsparmaßnahmen des Mikrocontrollers zu verwenden, da hierbei die Verbindung zum drahtlosen Netzwerk unterbrochen werden. Der Mikrocontroller kann dann nicht mehr auf Anfragen aus dem Netzwerk reagieren und dadurch nicht daraus geweckt werden.
 
 Der Quellcode für das Projekt ist auf GitHub verfügbar unter:\\ \url{https://github.com/Ava-chan/IOT_IR_Remote}\footnote{Stand: \today}
 
@@ -345,6 +343,7 @@ Der Quellcode für das Projekt ist auf GitHub verfügbar unter:\\ \url{https://g
 \acro{EEPROM}{\textbf{E}lectrically \textbf{E}rasable \textbf{P}rogrammable \textbf{R}ead-\textbf{O}nly \textbf{M}emory}{ - elektrisch löschbarer programmierbarer Nur-Lese-Speicher}
 \acro{GND}{Ground}{ - Masse}
 \acro{GPIO}{\textbf{G}eneral \textbf{P}urpose \textbf{I}nput \textbf{O}utput}{ - Durch logische Programmierung kann PIN Verhalten als Eingang oder Ausgang definiert werden}
+\acro{IDE}{\textbf{I}ntegrated \textbf{D}evelopment \textbf{E}nvironment}{ - Entwicklungsumgebung zum Zwecke der Programmierung}
 \acro{IoT}{\textbf{I}nternet \textbf{o}f \textbf{T}hings}{ - \qq{intelligente Gegenstände} unterstützen Menschen unmerklich}
 \acro{LNA}{\textbf{L}ow \textbf{N}oise \textbf{A}mplifier}{ - Rausch armer Verstärker}
 \acro{mDNS}{\textbf{m}ulticast \textbf{DNS}}{- Ist ein Konfigurationsloses Verfahren um Netzwerkadressen als Namen zu IP-Adressen aufzulösen, dieses Verfahren muss vom Client-System unterstützt werden}
