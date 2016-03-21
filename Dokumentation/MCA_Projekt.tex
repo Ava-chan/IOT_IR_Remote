@@ -20,7 +20,7 @@
 
 \section{Einleitung}
 \subsection{Ausgangspunkt}
-Der Ausgangspunkt des Projektes ist die Absicht eine Infrarotfernbedingung mit Hilfe eines Mikrocontrollers zu realisieren. Im Rahmen des aktuellen Hype um \acs{IoT} stellt diese Anforderung für uns eine interessante Möglichkeit da, bisher nicht \acs{IoT} fähige, über Infrarotfernbedienung gesteuerten Geräten diese Funktion \qq{nachzurüsten}. Hierdurch soll die Ansteuerung der Geräte wesentlich individueller belegbar sein, ohne dass, wie in anderen schon vorhanden Lösungen, (z.B. Logitech Harmony\footnote{ \url{http://www.logitech.com/de-de/harmony-remotes} ; Stand: \today}) eine neue Fernbedienung die alte ersetzt. Vielmehr soll ein schon vorhandenes Gerät/vorhandene Geräte diese Aufgabe mit übernehmen können.
+Der Ausgangspunkt des Projektes ist die Absicht eine Infrarotfernbedingung mit Hilfe eines Mikrocontrollers zu realisieren. Im Rahmen des aktuellen Hype um \acs{IoT} stellt diese Anforderung für uns eine interessante Möglichkeit da, bisher nicht \acs{IoT} fähige, über Infrarotfernbedienung gesteuerten Geräten diese Funktion \qq{nachzurüsten}. Hierdurch soll die Ansteuerung der Geräte wesentlich individueller belegbar sein, ohne dass, wie in anderen schon vorhanden Lösungen, (z.B. Logitech Harmony\footnote{ \url{http://www.logitech.com/de-de/harmony-remotes} ; Stand: \today}) eine neue Fernbedienung die Alte ersetzt. Vielmehr soll ein schon vorhandenes Gerät/vorhandene Geräte diese Aufgabe mit übernehmen können.
 
 Zur Umsetzung dieses Vorhabens bietet sich der Mikrocontroller ESP8266 an.
 Er ist preiswert und besitzt ein integriertes WLAN-Modul.
@@ -113,9 +113,7 @@ Ein Infrarotempfänger besteht aus einer Fotodiode, einem geregeltem Verstärker
 Der Demodulator sendet das digital codierte Signal an den Mikrocontroller.
 Weiterhin besitzt der integrierte Schaltkreis einen Bandpassfilter um Störungen von anderen Frequenzen als der gewünschten Frequenz zu vermeiden.
 Meist sind Fotodiode und Schaltkreis in einem Kunststoffgehäuse integriert.
-Wir haben uns für den TSOP4836 entschieden, da dieser auf 38 kHz abgestimmt ist. Weitere Trägerfrequenzen sind in gleicher Bauform erhältlich.
-
-Datenblatt: \url{http://mkpochtoi.narod.ru/TSOP4836_ds.pdf}\footnote{Stand: \today}
+Wir haben uns für den TSOP4836\footnote{Datenblatt: \url{http://mkpochtoi.narod.ru/TSOP4836_ds.pdf} Stand: \today} entschieden, da dieser auf 38 kHz abgestimmt ist. Weitere Trägerfrequenzen sind in gleicher Bauform erhältlich.
 
 Auf die konkreten Details zu PWM wird in dieser Dokumentation nicht eingegangen.
 
@@ -151,18 +149,18 @@ Dieser liefert an VCC 5V. Wird er ohne PC betrieben kann er über ein einfaches 
 Der ESP8266 selbst benötigt 3,3V und ist nicht 5V tolerant, sodass ein Festspannungsregler verwendet wird um 3,3V für den Mikrocontroller zur Verfügung zu stellen.
 Als Spannungsregler bietet sich zum Beispiel der LM1117-3V3\footnote{\url{http://www.ti.com/lit/ds/symlink/lm1117.pdf} ; Stand: \today} (verwendet) oder ein L7805 an.
 Der Spannungsregler ist im Schaltplan als 78XX dargestellt.
-Zur Spannungsstabilisierung wird dem Regler ein 100 nF Kondensator vor und ein Masse einen 10$\mu$F-Kondensator nachgeschaltet.
+Zur Spannungsstabilisierung wird dem Regler ein 100 nF Kondensator vor und ein 10$\mu$F-Kondensator nachgeschaltet.
 
 Nun wird für den ESP8266 die benötigte Spannung von 3,3V bereitgestellt.
 Die Pins \acs{VCC} und \acs{CHPD} werden mit der Spannungsquelle 3,3V verbunden und \ac{GND} entsprechend auf Masse gelegt.
 Der \acs{RST}-Pin wird mit einem Taster verbunden, welcher bei betätigen diesen Pin auf Masse zieht (interner Pull Up) und somit den Mikrocontroller zurücksetzt.
 
-Das ESP8266-Modul besitzt 2 Digitale Ein beziehungsweise Ausgänge. \acs{GPIO}\_0 benutzen wir als Ausgang und \acs{GPIO}\_2 benutzen wir als Eingang.
+Das ESP8266-Modul besitzt 2 Digitale Ein- beziehungsweise Ausgänge. \acs{GPIO}\_0 benutzen wir als Ausgang und \acs{GPIO}\_2 benutzen wir als Eingang.
 Wie diese Pins arbeiten wird bei der Programmierung festgelegt.
 
 An dem {GPIO}\_0 ist ein DIP-Schalter angeschlossen.
 Dieser dient dazu zwischen dem Programmiermodus und dem normalen Modus zu Wechseln.
-Der Pin ist Low-Aktiv, sodass für den normalen Betrieb und nach einem Reset immer 3,3V anliegen muss.
+Der Pin ist Low-Aktiv, sodass für den normalen Betrieb und nach einem Reset immer 3,3V anliegen.
 Für das Programmieren wird dieser Pin auf Masse gezogen in dem der Schalter entsprechend gesetzt wird und ein Reset ausgeführt wird.
 Andernfalls ist der DIP-Schalter mit einer Infrarotdiode (1,5V, 80mA) inklusive Vorwiederstand(22 Ohm) verbunden.
 Die Diode und der Widerstand sind mit der 3,3V Spannungsquelle verbunden.
@@ -171,7 +169,7 @@ Diese Diode dient später dazu die Infrarotsignale zu senden.
 Der \acs{GPIO}\_0 2 wird mit dem Infrarotempfänger verbunden und dient zur Erfassung der Infrarot-Signale.
 Der Infrarotempfänger wird entsprechend mit der 3,3V Spannungsquelle und der Masse verbunden.
 
-Aufgrund dessen, dass Senden und Empfangen nicht gleichzeitig möglich sind, bedarf es keiner Abschirmung zwischen Sende und Empfangsdiode. Es wird über die Programmierung sichergestellt das der Sender während des erwarteten Aufnehmens von Signalen nicht Leuchtet (Ausgang liegt auf High).
+Aufgrund dessen, dass Senden und Empfangen nicht gleichzeitig möglich sind, bedarf es keiner Abschirmung zwischen Sende und Empfangsdiode. Es wird über die Programmierung sichergestellt das der Sender während des erwarteten Aufnehmens von Signalen nicht leuchtet (Ausgang liegt auf High).
 
 Die \autoref{fig:Steckplatine} zeigt den Aufbau auf einer Steckplatine.
 
@@ -192,14 +190,11 @@ Diese 2 Teile sind jeweils definiert durch die Funktionen \texttt{setup()} (Init
 In der Funktion \texttt{setup} werden Befehle ausgeführt, welche beim Starten des Mikrocontrollers aufgerufen werden sollen.
 Zum Beispiel ist es möglich im Setup eine Verbindung zum einem drahtlosen Netzwerk herzustellen und Serverfunktionalität bereitzustellen.
 Nach Abschluss des Setups gelangt der Mikrocontroller in die \texttt{loop}-Funktion.
-Diese Funktion wird beständig immer wieder aufgerufen und entsprechende entsprechende Befehle in der Funktion ausgeführt.
+Diese Funktion wird immer wieder aufgerufen und entsprechende Befehle in der Funktion ausgeführt.
 Zum Beispiel wird an dieser Stelle geprüft ob ein Client eine Anfrage an den Mikrocontroller gesendet hat.
 Falls ja, werden die entsprechenden Funktionen ausgeführt.
 
-\subsubsection{Programmablaufplan}
-%TODO PAP für loop (übersichtlicher, wenn getrennt)
-%beispiel: http://www.texample.net/tikz/examples/simple-flow-chart/
-
+\subsubsection{Setup}
 % Define block styles
 \tikzstyle{decision} = [diamond, draw, 
     text width=4.5em, text badly centered, node distance=3cm, inner sep=0pt]
@@ -209,15 +204,16 @@ Falls ja, werden die entsprechenden Funktionen ausgeführt.
 \tikzstyle{cloud} = [draw, ellipse, node distance=3cm,
     minimum height=2em]
 
-\begin{center} 
-\begin{tikzpicture}[node distance = 2cm, auto]
+\begin{figure}[!ht]
+\centering 
+\begin{tikzpicture}[node distance = 2cm, auto, scale=0.8, every node/.style={scale=0.8}]
     % Place nodes
     \node [block] (init) {Start};
     \node [block, below of=init] (confPin) {Konfiguriere GPIOs};
     \node [cloud, left of=init] (setup) {Setup( )};
-    \node [block, below of=confPin] (readIR) {Lese Infrarot-\footnotemark};
-    \node [block, below of=readIR] (readWLAN) {Lese WLAN-\footnotemark[\value{footnote}]};
-    \node [block, below of=readWLAN] (connectWLAN) {Verbinde mit WLAN};
+    \node [block, below of=confPin, node distance=2.5cm] (readIR) {Lese Infrarot-Daten aus Speicher};
+    \node [block, below of=readIR, node distance=2.5cm] (readWLAN) {Lese WLAN-Daten aus Speicher};
+    \node [block, below of=readWLAN, , node distance=2.5cm] (connectWLAN) {Verbinde mit WLAN};
     \node [decision, below of=connectWLAN] (decide) {Erfolgreich ?};
    	\node [block, left of=decide, node distance=4cm] (startAP) {Starte als AP};
     \node [block, below of=decide, node distance=3cm] (mDNS) {Starte \acs{mDNS}};
@@ -238,8 +234,65 @@ Falls ja, werden die entsprechenden Funktionen ausgeführt.
     \path [line,dashed] (setup) -- (init);
     \path [line,dashed] (ende) -- (loop);
 \end{tikzpicture}
-\footnotetext{Daten aus Speicher des ESP8266}
-\end{center}
+
+\caption{Programmablaufplan für Setup()}
+\label{PAP:Setup}
+\end{figure}
+
+Die \autoref{PAP:Setup} zeigt den Programmablaufplan für den Aufruf der Setup-Funktion.
+Beim starten des ESP8266 führt die Setup-Funktion folgende Schritte aus:
+Zunächst wird der \acs{GPIO}\_0 als Ausgabe und \acs{GPIO}\_2 als Eingabe-Pin festgelegt.
+Im Anschluss werden gespeicherte Infrarotcodes, auch als Stationen bezeichnet, aus dem \acs{EEPROM} gelesen.
+%TODO Speichergröße, wieviele Stationen usw.
+
+Nachdem die Infrarotcodes gelesen wurden, werden nun die drahtlosen Netzwerkdaten aus dem \acs{EEPROM} des ESP8266 gelesen.
+Mit diesen Daten wird versucht sich in das drahtlose Netzwerk einzubinden.
+Falls die Verbindung fehlschlägt, zum Beispiel, weil ein falsches Passwort gespeichert wurde, dann startet der Mikrocontroller als AccessPoint.
+Im Anschluss werden Funktionen ausgeführt, welche Serverfähigkeiten bereitstellen und die Setup-Funktion ist fertig.
+Nun kann ein drahtloses Netzwerkfähiges Gerät sich mit dem ESP8266 verbinden und über die IP-Adresse 192.168.4.1 im Browser auf den ESP8266 zugreifen und konfigurieren.
+
+Sollte die Verbindung mit einem drahtloses Netzwerk erfolgreich sein, so wird zusätzlich noch der mDNS-Dienst ausgeführt.
+Dies ist ein konfigurationsloses Verfahren um lokale Netzwerkadressen als Namen bereitzustellen.
+Dieses Verfahren muss explizit vom entsprechendem System unterstützt werden.
+Es kann über \url{iot_remote.local} oder die zugewiesene IP-Adresse auf den ESP8266 zugegriffen werden.
+
+Den Zugriff und die dargestellten Websites des ESP8266 werden in der Loop-Funktion geregelt.
+\subsubsection{Loop}
+\begin{figure}[!ht]
+\centering 
+\begin{tikzpicture}[node distance = 2cm, auto, scale=0.8, every node/.style={scale=0.8}]
+    % Place nodes
+    \node [block] (init) {Start};
+    \node [block, below of=init] (confPin) {Konfiguriere GPIOs};
+    \node [cloud, left of=init] (setup) {Setup( )};
+    \node [block, below of=confPin, node distance=2.5cm] (readIR) {Lese Infrarot-Daten aus Speicher};
+    \node [block, below of=readIR, node distance=2.5cm] (readWLAN) {Lese WLAN-Daten aus Speicher};
+    \node [block, below of=readWLAN, , node distance=2.5cm] (connectWLAN) {Verbinde mit WLAN};
+    \node [decision, below of=connectWLAN] (decide) {Erfolgreich ?};
+   	\node [block, left of=decide, node distance=4cm] (startAP) {Starte als AP};
+    \node [block, below of=decide, node distance=3cm] (mDNS) {Starte \acs{mDNS}};
+ 	\node [block, below of=mDNS] (launch) {Starte Server};
+    \node [block, below of=launch] (ende) {Ende};
+    \node [cloud, right of=ende] (loop) {Loop( )};
+    % Draw edges
+    \path [line] (init) -- (confPin);
+    \path [line] (confPin) -- (readIR);
+    \path [line] (readIR) -- (readWLAN);
+    \path [line] (readWLAN) -- (connectWLAN);
+    \path [line] (connectWLAN) -- (decide);
+	\path [line] (decide) -- node [near start] {Nein} (startAP);
+    \path [line] (startAP) |- (launch);
+    \path [line] (decide) -- node {Ja}(mDNS);
+    \path [line] (mDNS) -- (launch);
+    \path [line] (launch) -- (ende);
+    \path [line,dashed] (setup) -- (init);
+    \path [line,dashed] (ende) -- (loop);
+\end{tikzpicture}
+\caption{Programmablaufplan für Loop()}
+\label{PAP:Loop}
+\end{figure}
+
+Die \autoref{PAP:Loop} zeigt den Programmablaufplan für den Aufruf der Loop-Funktion.
 
 %TODO Noch zu vervollständigen
 
@@ -289,7 +342,8 @@ Der Quellcode für das Projekt ist auf GitHub verfügbar unter:\\ \url{https://g
 \acro{CHPD}{\textbf{C}hip \textbf{P}ower \textbf{D}own}{ -Der Chip kann mit Hilfe dieses Pins vollständig heruntergefahren werden}
 \acro{DCXO}{\textbf{D}igitally \textbf{C}ontrolled \textbf{O}scillator}{ - digital gesteuerter Quarzoszillator}
 \acro{DTIM3}{\textbf{D}elivery \textbf{T}raffic \textbf{I}ndication \textbf{M}essage}{- regelmäßiger Broadcast des Access Point um Wireless-Stationen aufzuwecken}
-\acro{GND}{Ground}
+\acro{EEPROM}{\textbf{E}lectrically \textbf{E}rasable \textbf{P}rogrammable \textbf{R}ead-\textbf{O}nly \textbf{M}emory}{ - elektrisch löschbarer programmierbarer Nur-Lese-Speicher}
+\acro{GND}{Ground}{ - Masse}
 \acro{GPIO}{\textbf{G}eneral \textbf{P}urpose \textbf{I}nput \textbf{O}utput}{ - Durch logische Programmierung kann PIN Verhalten als Eingang oder Ausgang definiert werden}
 \acro{IoT}{\textbf{I}nternet \textbf{o}f \textbf{T}hings}{ - \qq{intelligente Gegenstände} unterstützen Menschen unmerklich}
 \acro{LNA}{\textbf{L}ow \textbf{N}oise \textbf{A}mplifier}{ - Rausch armer Verstärker}
