@@ -6,7 +6,7 @@
 
 \title{Entwicklung eines IR-Empfänger und -Sender mit dem ESP8266}
 \subtitle{Dokumentation: Mikrocontroller-Anwendungs-Projekt}
-\author{} %TODO Später hinzufügen
+\author{Eike Florian Petersen und Michael Horn} 
 \date{\today}
 
 \maketitle
@@ -64,7 +64,8 @@ Nachfolgend ist die Spezifikation eines ESP8266 laut Espressif\footnote{\url{htt
     \item Flash Größe: 512kB - 4MB 
 \end{itemize}
 
-Verfügbare Flash-Größe, Arbeitsspeicher und CPU-Frequenz sind Modell und Hersteller abhängig. Häufig wird die versendete Form innerhalb des online Angebots nicht genauer beschrieben.
+Verfügbare Flash-Größe, Arbeitsspeicher und CPU-Frequenz sind Modell und Hersteller abhängig. 
+Häufig wird die versendete Form innerhalb des online Angebots nicht genauer beschrieben.
 
 In der \autoref{fig:ESP8266} ist ein ESP8266 mit dem dazugehörigen Pinlayout dargestellt.
 
@@ -110,7 +111,7 @@ Weiterhin besitzt der integrierte Schaltkreis einen Bandpassfilter um Störungen
 Meist sind Fotodiode und Schaltkreis in einem Kunststoffgehäuse integriert.
 Wir haben uns für den TSOP4836\footnote{Datenblatt: \url{http://mkpochtoi.narod.ru/TSOP4836_ds.pdf} Stand: \today} entschieden, da dieser auf 38 kHz abgestimmt ist. Weitere Trägerfrequenzen sind in gleicher Bauform erhältlich.
 
-Auf die konkreten Details zu PWM wird in dieser Dokumentation nicht eingegangen.
+Auf die konkreten Details zu \acs{PWM} wird in dieser Dokumentation nicht eingegangen.
 
 \section{Realisierung}
 Nachdem die Grundlagen für das Projekt betrachtet wurden, soll nun die konkrete Realisierung des Projektes verdeutlicht werden.
@@ -118,7 +119,7 @@ Nachdem die Grundlagen für das Projekt betrachtet wurden, soll nun die konkrete
 Für die Realisierung des Projektes werden folgenden Komponenten benötigt:
 \begin{itemize}
 	\item Der Mikrocontroller: ESP8266
-	\item Ein Spannungsregler: LM1117-3V3
+	\item Ein Spannungsregler für 3,3V: LM1117-3V3
 	\item Infrarotleuchtdiode: 1,5V / 80mA
 	\item Vorwiderstand für Diode: 22 Ohm
 	\item Infrarotempfänger: TSOP4836 für die Trägerfrequenz 38kHz
@@ -195,6 +196,8 @@ Diese werden in der Implementierung wie folgt genutzt
 Die tatsächliche Länge von Infrarotcodes ist abhängig von den verwendeten Protokollen.
 
 \subsubsection{Setup}
+%TODO Okay so?
+
 % Define block styles
 \tikzstyle{decision} = [diamond, draw, 
     text width=4.5em, text badly centered, node distance=3cm, inner sep=0pt]
@@ -250,14 +253,14 @@ Falls die Verbindung fehlschlägt, zum Beispiel, weil ein falsches Passwort gesp
 Im Anschluss werden Funktionen ausgeführt, welche Serverfähigkeiten bereitstellen und die Setup-Funktion ist fertig.
 Nun kann ein drahtloses Netzwerkfähiges Gerät sich mit dem ESP8266 verbinden und über die IP-Adresse 192.168.4.1 im Browser auf den ESP8266 zugreifen und konfigurieren.
 
-Sollte die Verbindung mit einem drahtloses Netzwerk erfolgreich sein, so wird zusätzlich noch der mDNS-Dienst ausgeführt.
+Sollte die Verbindung mit einem drahtloses Netzwerk erfolgreich sein, so wird zusätzlich noch der \acs{mDNS}-Dienst ausgeführt.
 Dies ist ein konfigurationsloses Verfahren um lokale Netzwerkadressen als Namen bereitzustellen.
 Dieses Verfahren muss explizit vom entsprechendem System unterstützt werden.
 Es kann über \url{iot_remote.local} oder die zugewiesene IP-Adresse auf den ESP8266 zugegriffen werden.
 
 Den Zugriff und die Darstellung der Website des ESP8266 wird in der Loop-Funktion geregelt.
 \subsubsection{Loop}
-%TODO ahhh grübel, wegen guter und sinnvoller darstellung....
+%TODO Okay so?
 \begin{figure}[!ht]
 \centering 
 \begin{tikzpicture}[node distance = 2cm, auto, scale=0.8, every node/.style={scale=0.8}]
@@ -267,22 +270,56 @@ Den Zugriff und die Darstellung der Website des ESP8266 wird in der Loop-Funktio
     \node [decision, below of=init] (decide) {Anfrage Client ?};
     \node [block, below of=decide, node distance=3cm] (end) {Ende};
     \node [cloud, right of=end] (loopEnd) {Loop( )};
-    \node [block, left of=decide, node distance=4cm] (root) {Zeige Startseite};
+    \node [block, left of=decide, node distance=4cm] (work) {Führe Anfrage aus};
+    \node [block, below of=work, node distance=3cm] (site) {Stelle Website dar};
     % Draw edges
     \path [line] (init) -- (decide);
     \path [line,dashed] (loopStart) -- (init); 
     \path [line] (decide) -- node [near start] {Nein} (end);
     \path [line,dashed] (end) -- (loopEnd);
-    \path [line] (decide) -- node {Ja}(root);
-     \path [line] (root) -- (end);
+    \path [line] (decide) -- node {Ja}(work);
+    \path [line] (work) -- (site);
+     \path [line] (site) -- (end);
 \end{tikzpicture}
 \caption{Programmablaufplan für Loop()}
 \label{PAP:Loop}
 \end{figure}
 
-Die \autoref{PAP:Loop} zeigt den Programmablaufplan für den Aufruf der Loop-Funktion.
+Die \autoref{PAP:Loop} zeigt den stark vereinfachten Programmablaufplan für den Aufruf der Loop-Funktion.
+Sobald ein Endgerät über die IP-Adresse oder über die Adresse \url{iot_remote.local}\footnote{Nicht im AccessPoint-Modus}\footnote{Setzt \acs{mDNS}-Unterstützung voraus} auf den ESP8266 zugreift, wird die Anfrage entsprechend bearbeitet und anschließend die darzustellende Seite an das Endgerät gesendet.
+Die \autoref{fig:Start} zeigt diese Startseite der Anwendung beim Aufruf mittels eines Browsers.
+\begin{figure}[!ht]
+	\centering
+	\includegraphics[scale=0.3]{Abbildungen/Start}
+	\caption{Startseite der Anwendung}
+	\label{fig:Start}
+\end{figure}
+Anschließend führt der ESP8266 die Schleife weiter aus.
+Ein Klick auf eine Schaltfläche führt die entsprechende Funktionalität auf dem ESP8266 aus.
 
-%TODO Noch zu vervollständigen
+Die Schaltfläche \qq{Settings} führt zur Konfigurationsseite für drahtlose Netzwerke.
+In der \autoref{fig:WIFI} wird die Konfigurationsmaske für drahtlose Netzwerkdaten dargestellt.
+\begin{figure}[!ht]
+	\centering
+	\includegraphics[scale=0.3]{Abbildungen/WIFI}
+	\caption{Konfigurationsmaske für drahtlose Netzwerkdaten}
+	\label{fig:WIFI}
+\end{figure}
+Bei Klick auf \qq{Submit} werden die angegeben Netzwerkdaten in dem \acs{EEPROM} des ESP8266 gespeichert und bei einem Neustart verwendet um eine Verbindung zum drahtlosen Netzwerk herzustellen.
+Weiterhin ist es mit Klick auf \qq{clear all stations} möglich, alle gespeicherten Infrarotcodes zurückzusetzen.
+
+Wird auf der Startseite ein Klick auf \qq{Record New} ausgeführt, dann können Infrarotcodes aufgenommen, bezeichnet und abgespeichert werden.
+Das Ergebnis der Aufnahme von Infrarotcodes wird bei \autoref{fig:Show} gezeigt, dabei wird der Code als Liste von ganzen Zahlen angezeigt. 
+%TODO Stimmt diese Aussage?
+\begin{figure}[!ht]
+	\centering
+	\includegraphics[scale=0.3]{Abbildungen/Show}
+	\caption{Maske zum Speichern der aufgenommenen Infrarotcodes}
+	\label{fig:Show}
+\end{figure}
+Angelegte Infrarotcodes inklusive Bezeichnung werden auf der Startseite als Schaltflächen dargestellt.
+Werden diese angeklickt, so wird der gespeicherte Infrarotcode gesendet.
+In der \autoref{fig:Start} sind solche Tasten mit der Bezeichnung \qq{On} und \qq{Off} dargestellt, welche zum Beispiel als An- und Ausschalter eines Gerätes dienen.
 
 \subsubsection{Infrarotsignale Empfangen}
 %TODO erklären ?? Wie funktioniert das? (Eike)
@@ -297,39 +334,6 @@ Dies kann mit Hilfe eines $\mu$s-delay Befehl realisiert werden.
 Jeder Puls ist 1/38000 Sekunden (26,3 $\mu$s) lang. Die restlichen 0.3 $\mu$s werden ca. von den Ansteuerungfunktionen für das Wechseln zwischen HIGH und LOW des Ausgangs so wie der Schleife verwendet.
 Gerundet auf 26 $\mu$s ist die Modulationsfrequenz realisierbar mit:
 %TODO Pseudocode wenn fertig ?
-
-\section{Verwendung}
-%TODO
-%Wie wird das Gerät verwendet nochmal erklären und mit Screenshots unterlegen
-
-Die \autoref{fig:Start} zeigt die Startseite der Anwendung beim Aufruf mittels eines Browsers.
-
-\begin{figure}
-	\centering
-	\includegraphics[scale=0.3]{Abbildungen/Start}
-	\caption{Startseite der Anwendung}
-	\label{fig:Start}
-\end{figure}
-
-In der \autoref{fig:WIFI} wird die Konfigurationsmaske für drahtlose Netzwerkdaten dargestellt.
-
-\begin{figure}
-	\centering
-	\includegraphics[scale=0.3]{Abbildungen/WIFI}
-	\caption{Konfigurationsmaske für drahtlose Netzwerkdaten}
-	\label{fig:WIFI}
-\end{figure}
-
-Die Maske zum Speichern eines aufgenommenen Infrarotcodes wird in der \autoref{fig:Show} gezeigt.
-
-\begin{figure}
-	\centering
-	\includegraphics[scale=0.3]{Abbildungen/Show}
-	\caption{Maske zum Speichern der aufgenommenen Infrarotcodes}
-	\label{fig:Show}
-\end{figure}
-
-
 
 \section{Fazit}
 %TODO Herr Bastian mag es, wenn ALLES gelernte in das Fazit / Zusammenfassung einfließt-> Fazit darf ruhig mehrere Seiten lang sein!!
