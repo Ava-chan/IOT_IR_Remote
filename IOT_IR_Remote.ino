@@ -264,7 +264,7 @@ int found_start = -1;
 void handleRecord() {
   String html = "";
   html += html_header
-  + "<meta http-equiv=\"refresh\" content=\"6; URL=/show\">" //Back to start page after 5 sec
+  + "<meta http-equiv=\"refresh\" content=\"6; URL=/show\">" //to show page after 5 sec
   + html_header_end
   + "<div id=\"header\"> <h1>IOT_Remote</h1></div></br>Record now for 5 seconds"
   + html_footer;
