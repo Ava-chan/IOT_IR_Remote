@@ -64,7 +64,6 @@ Nachfolgend ist die Spezifikation eines ESP8266 laut Espressif\footnote{\url{htt
     \item Flash Größe: 512kB - 4MB 
 \end{itemize}
 
-
 Verfügbare Flash-Größe, Arbeitsspeicher und CPU-Frequenz sind Modell und Hersteller abhängig. Häufig wird die versendete Form innerhalb des online Angebots nicht genauer beschrieben.
 
 In der \autoref{fig:ESP8266} ist ein ESP8266 mit dem dazugehörigen Pinlayout dargestellt.
@@ -93,13 +92,8 @@ Für die Programmierung bieten sich beispielsweise sogenannte USB-to-\acs{UART}-
 Hierbei ist zu beachten, dass die Spannungsversorgung am Ausgang der meisten Programmierkabel 5V und nicht 3.3V beträgt. Der Mikrocontroller ist nicht 5V tolerant.
 
 \subsection{Funktionsweise Fernbedienung}
-%TODO Ausreichend?
-%Damit eine WLAN-gesteuerte Infrarotfernbedingung realisiert werden kann, müssen zunächst die Grundlagen einer solchen Fernbedingung kurz erklärt werden.
 
 Eine übliche Infrarot-Fernbedienung sendet ein Signal welches bei den meisten Herstellern von Fernsehern auf eine Trägerfrequenz von 36 - 38 kHz moduliert ist.
-%Dieses Signal wird mit einer bestimmten Trägerfrequenz gesendet.
-%Viele Fernbedingungen arbeiten beispielsweise mit einer Trägerfrequenz von 38kHz.
-%Es existieren aber Fernbedingungen, welche andere Frequenzen nutzen.
 In diesem Projekt wird eine Fernbedingung mit 38kHz realisiert. Bei genügend hoher Toleranz können hiermit aber auch Empfänger gesteuert werden welche ein 36 kHz Signal erwarten.
 Es ist jedoch wichtig sich auf eine Frequenz festzulegen, da die Frequenz Einfluss auf Bauteile und Programmierung hat.
 
@@ -121,7 +115,6 @@ Auf die konkreten Details zu PWM wird in dieser Dokumentation nicht eingegangen.
 \section{Realisierung}
 Nachdem die Grundlagen für das Projekt betrachtet wurden, soll nun die konkrete Realisierung des Projektes verdeutlicht werden.
 \subsection{Komponentenliste}
-%TODO Liste
 Für die Realisierung des Projektes werden folgenden Komponenten benötigt:
 \begin{itemize}
 	\item Der Mikrocontroller: ESP8266
@@ -134,8 +127,6 @@ Für die Realisierung des Projektes werden folgenden Komponenten benötigt:
 
 
 \subsection{Aufbau}
-%TODO Vollständig?
-
 Die \autoref{fig:Schalplan} zeigt den Schaltplan für die Realisierung einer Infrarotfernbedingung inklusive Empfänger.
 
 \begin{figure}
@@ -180,8 +171,6 @@ Die \autoref{fig:Steckplatine} zeigt den Aufbau auf einer Steckplatine.
 	\caption{Steckplatine}
 	\label{fig:Steckplatine}
 \end{figure}
-
-
 
 \subsection{Implementierung}
 %TODO vervollständigen
@@ -266,8 +255,9 @@ Dies ist ein konfigurationsloses Verfahren um lokale Netzwerkadressen als Namen 
 Dieses Verfahren muss explizit vom entsprechendem System unterstützt werden.
 Es kann über \url{iot_remote.local} oder die zugewiesene IP-Adresse auf den ESP8266 zugegriffen werden.
 
-Den Zugriff und die dargestellten Websites des ESP8266 werden in der Loop-Funktion geregelt.
+Den Zugriff und die Darstellung der Website des ESP8266 wird in der Loop-Funktion geregelt.
 \subsubsection{Loop}
+%TODO ahhh grübel, wegen guter und sinnvoller darstellung....
 \begin{figure}[!ht]
 \centering 
 \begin{tikzpicture}[node distance = 2cm, auto, scale=0.8, every node/.style={scale=0.8}]
@@ -277,14 +267,14 @@ Den Zugriff und die dargestellten Websites des ESP8266 werden in der Loop-Funkti
     \node [decision, below of=init] (decide) {Anfrage Client ?};
     \node [block, below of=decide, node distance=3cm] (end) {Ende};
     \node [cloud, right of=end] (loopEnd) {Loop( )};
-    \node [block, left of=decide, node distance=4cm] (doSth) {doSth};
+    \node [block, left of=decide, node distance=4cm] (root) {Zeige Startseite};
     % Draw edges
     \path [line] (init) -- (decide);
     \path [line,dashed] (loopStart) -- (init); 
     \path [line] (decide) -- node [near start] {Nein} (end);
     \path [line,dashed] (end) -- (loopEnd);
-    \path [line] (decide) -- node {Ja}(doSth);
-     \path [line] (doSth) -- (end);
+    \path [line] (decide) -- node {Ja}(root);
+     \path [line] (root) -- (end);
 \end{tikzpicture}
 \caption{Programmablaufplan für Loop()}
 \label{PAP:Loop}
@@ -296,7 +286,9 @@ Die \autoref{PAP:Loop} zeigt den Programmablaufplan für den Aufruf der Loop-Fun
 
 \subsubsection{Infrarotsignale Empfangen}
 %TODO erklären ?? Wie funktioniert das? (Eike)
+%TODO mit Pseudocode?
 \subsubsection{Infrarotsignale Senden}
+%TODO vervollständigen (Eike)
 Damit Infrarotsignale mit einer Trägerfrequenz von 38kHz gesendet werden, bedarf es einem Trick in der Programmierung um dies zu realisieren.
 Dies geschieht in dem der digitale Ausgang \acs{GPIO}\_2 zwischen einer logischen 1 und 0 alterniert.
 Die Länge des Pulses beschreibt den gesendeten Befehl an den Infrarotempfänger.
@@ -304,14 +296,45 @@ Die Länge des Pulses beschreibt den gesendeten Befehl an den Infrarotempfänger
 Dies kann mit Hilfe eines $\mu$s-delay Befehl realisiert werden.
 Jeder Puls ist 1/38000 Sekunden (26,3 $\mu$s) lang. Die restlichen 0.3 $\mu$s werden ca. von den Ansteuerungfunktionen für das Wechseln zwischen HIGH und LOW des Ausgangs so wie der Schleife verwendet.
 Gerundet auf 26 $\mu$s ist die Modulationsfrequenz realisierbar mit:
-%TODO Pseudocode wenn fertig
+%TODO Pseudocode wenn fertig ?
 
-\subsection{Verwendung}
-%TODO Screenshots browser (wäre cool, wenn du das machst Eike.., da bei mir der Mikrocontroller nachwievor rumzickt..) , verwendung beschreiben
+\section{Verwendung}
+%TODO
+%Wie wird das Gerät verwendet nochmal erklären und mit Screenshots unterlegen
+
+Die \autoref{fig:Start} zeigt die Startseite der Anwendung beim Aufruf mittels eines Browsers.
+
+\begin{figure}
+	\centering
+	\includegraphics[scale=0.3]{Abbildungen/Start}
+	\caption{Startseite der Anwendung}
+	\label{fig:Start}
+\end{figure}
+
+In der \autoref{fig:WIFI} wird die Konfigurationsmaske für drahtlose Netzwerkdaten dargestellt.
+
+\begin{figure}
+	\centering
+	\includegraphics[scale=0.3]{Abbildungen/WIFI}
+	\caption{Konfigurationsmaske für drahtlose Netzwerkdaten}
+	\label{fig:WIFI}
+\end{figure}
+
+Die Maske zum Speichern eines aufgenommenen Infrarotcodes wird in der \autoref{fig:Show} gezeigt.
+
+\begin{figure}
+	\centering
+	\includegraphics[scale=0.3]{Abbildungen/Show}
+	\caption{Maske zum Speichern der aufgenommenen Infrarotcodes}
+	\label{fig:Show}
+\end{figure}
+
+
+
+\section{Fazit}
 %TODO Herr Bastian mag es, wenn ALLES gelernte in das Fazit / Zusammenfassung einfließt-> Fazit darf ruhig mehrere Seiten lang sein!!
 %TODO Bitte ergänze das hier bitte mit @ Eike
 %TODO Vervollständigen
-\section{Fazit}
 
 Im Verlaufe des Projektes ist ein über ein drahtloses Netzwerk steuerbare Mikrocontroller-Anwendung entstanden, welcher in einem heimischen Netzwerk verwendet werden kann.
 
