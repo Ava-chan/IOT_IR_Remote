@@ -13,14 +13,15 @@
 
 \tableofcontents										% Inhaltsverzeichnis
 \pagebreak
-%\listoffigures											% Abbildungsverzeichnis
-%\pagebreak
+\listoffigures											% Abbildungsverzeichnis
+\pagebreak
 %\listoftables											% Tabellenverzeichnis
 %\pagebreak
 
 \section{Einleitung}
 \subsection{Ausgangspunkt}
-Der Ausgangspunkt des Projektes ist die Absicht eine Infrarotfernbedingung mit Hilfe eines Mikrocontrollers zu realisieren. Im Rahmen des aktuellen Hype um \acs{IoT} stellt diese Anforderung für uns eine interessante Möglichkeit da, bisher nicht \acs{IoT} fähige, über Infrarotfernbedienung gesteuerten Geräten diese Funktion \qq{nachzurüsten}. Hierdurch soll die Ansteuerung der Geräte wesentlich individueller belegbar sein, ohne dass, wie in anderen schon vorhanden Lösungen, (z.B. Logitech Harmony\footnote{ \url{http://www.logitech.com/de-de/harmony-remotes} ; Stand: \today}) eine neue Fernbedienung die Alte ersetzt. Vielmehr soll ein schon vorhandenes Gerät/vorhandene Geräte diese Aufgabe mit übernehmen können.
+Der Ausgangspunkt des Projektes ist die Absicht eine Infrarotfernbedingung mit Hilfe eines Mikrocontrollers zu realisieren. 
+Im Rahmen des aktuellen Hype um \acs{IoT} stellt diese Anforderung für uns eine interessante Möglichkeit dar bisher nicht \acs{IoT}-fähige, über Infrarotfernbedienung gesteuerten Geräten, diese Funktion \qq{nachzurüsten}. Hierdurch soll die Ansteuerung der Geräte wesentlich individueller belegbar sein, ohne dass, wie in anderen schon vorhanden Lösungen, (z.B. Logitech Harmony\footnote{ \url{http://www.logitech.com/de-de/harmony-remotes} ; Stand: \today}) eine neue Fernbedienung die Alte ersetzt. Vielmehr soll ein schon vorhandenes Gerät/vorhandene Geräte diese Aufgabe mit übernehmen können.
 
 Zur Umsetzung dieses Vorhabens bietet sich der Mikrocontroller ESP8266 an.
 Er ist preiswert und besitzt ein integriertes WLAN-Modul.
@@ -105,7 +106,7 @@ Die Protokolle werden in diesem Projekt vernachlässigt, da die Codierung im Wes
 
 Damit das Infrarotsignal empfangen werden kann, wird ein entsprechender Empfänger benötigt.
 Solche Empfänger sind als integrierte Schaltkreise verfügbar, welche alle benötigten Funktionen in einem Bauteil vereinen.
-Ein Infrarotempfänger besteht aus einer Fotodiode, einem geregeltem Verstärker, welcher entsprechend der Frequenz arbeitet (zum Beispiel 38kHz) und einem Demodulator.
+Ein Infrarotempfänger besteht aus einer Fotodiode, einem geregeltem Verstärker, welcher, entsprechend der Frequenz, arbeitet (zum Beispiel 38kHz) und einem Demodulator.
 Der Demodulator sendet das digital codierte Signal an den Mikrocontroller.
 Weiterhin besitzt der integrierte Schaltkreis einen Bandpassfilter um Störungen von anderen Frequenzen als der gewünschten Frequenz zu vermeiden.
 Meist sind Fotodiode und Schaltkreis in einem Kunststoffgehäuse integriert.
@@ -123,6 +124,8 @@ Für die Realisierung des Projektes werden folgenden Komponenten benötigt:
 	\item Zwei Kondensatoren: 10 $\mu$F, 100nF
 	\item Infrarotdiode: 1,5V / 80mA
 	\item Vorwiderstand für Diode: 22 Ohm
+	\item DIP-Schalter
+	\item Taster
 	\item Infrarotfotodiode: TSOP4838 für die Trägerfrequenz 38kHz
 	\item USB-to-UART-Programmierer: PL2303
 \end{itemize}
@@ -139,15 +142,16 @@ Die \autoref{fig:Schalplan} zeigt den Schaltplan für die Realisierung einer Inf
 \end{figure}
 
 Für die Programmierung des Mikrocontrollers wird ein USB-to-UART-Programmierer (PL2303) verwendet.
-Dieser liefert an VCC 5V. Wird er ohne PC betrieben kann er über ein einfaches 5V USB Netzteil auch als Zuleitung verwendet werden. Die TX und RX-Leitungen liegen dann auf 0V.
-Der ESP8266 selbst benötigt 3,3V und ist nicht 5V tolerant, sodass ein Festspannungsregler verwendet wird um 3,3V für den Mikrocontroller zur Verfügung zu stellen.
+Dieser liefert an VCC 5V. 
+Wird er ohne PC betrieben kann er über ein einfaches 5V USB Netzteil auch als Zuleitung verwendet werden. Die TX und RX-Leitungen liegen dann auf 0V.
+Der ESP8266 selbst benötigt 3,3V und ist nicht 5V tolerant, sodass ein Spannungsregler verwendet wird um 3,3V für den Mikrocontroller zur Verfügung zu stellen.
 Als Spannungsregler bietet sich zum Beispiel der LM1117-3V3\footnote{\url{http://www.ti.com/lit/ds/symlink/lm1117.pdf} ; Stand: \today} (verwendet) oder ein L7805 an.
 Der Spannungsregler ist im Schaltplan als 78XX dargestellt.
 Zur Spannungsstabilisierung wird dem Regler ein 100 nF Kondensator vor und ein 10$\mu$F-Kondensator nachgeschaltet.
 
 Nun wird für den ESP8266 die benötigte Spannung von 3,3V bereitgestellt.
 Die Pins \acs{VCC} und \acs{CHPD} werden mit der Spannungsquelle 3,3V verbunden und \ac{GND} entsprechend auf Masse gelegt.
-Der \acs{RST}-Pin wird mit einem Taster verbunden, welcher bei betätigen diesen Pin auf Masse zieht (interner Pull Up) und somit den Mikrocontroller zurücksetzt.
+Der \acs{RST}-Pin wird mit einem Taster verbunden, welcher bei betätigen diesen Pin auf Masse zieht (interner Pull-Up) und somit den Mikrocontroller zurücksetzt.
 
 Das ESP8266-Modul besitzt 2 Digitale Ein- beziehungsweise Ausgänge. \acs{GPIO}\_0 benutzen wir als Ausgang und \acs{GPIO}\_2 benutzen wir als Eingang.
 Wie diese Pins arbeiten wird bei der Programmierung festgelegt.
@@ -155,7 +159,7 @@ Wie diese Pins arbeiten wird bei der Programmierung festgelegt.
 An dem {GPIO}\_0 ist ein DIP-Schalter angeschlossen.
 Dieser dient dazu zwischen dem Programmiermodus und dem normalen Modus zu Wechseln.
 Der Pin ist Low-Aktiv, sodass für den normalen Betrieb und nach einem Reset immer 3,3V anliegen.
-Für das Programmieren wird dieser Pin auf Masse gezogen in dem der Schalter entsprechend gesetzt wird und ein Reset ausgeführt wird.
+Für das Programmieren wird dieser Pin auf Masse gezogen in dem der Schalter entsprechend gesetzt und ein Reset ausgeführt wird.
 Andernfalls ist der DIP-Schalter mit einer Infrarotdiode (1,5V, 80mA) inklusive Vorwiederstand(22 Ohm) verbunden.
 Die Diode und der Widerstand sind mit der 3,3V Spannungsquelle verbunden.
 Diese Diode dient später dazu die Infrarotsignale zu senden.
@@ -163,7 +167,7 @@ Diese Diode dient später dazu die Infrarotsignale zu senden.
 Der \acs{GPIO}\_0 2 wird mit dem Infrarotempfänger verbunden und dient zur Erfassung der Infrarot-Signale.
 Der Infrarotempfänger wird entsprechend mit der 3,3V Spannungsquelle und der Masse verbunden.
 
-Aufgrund dessen, dass Senden und Empfangen nicht gleichzeitig möglich sind, bedarf es keiner Abschirmung zwischen Sende und Empfangsdiode. Es wird über die Programmierung sichergestellt das der Sender während des erwarteten Aufnehmens von Signalen nicht leuchtet (Ausgang liegt auf High).
+Aufgrund dessen, dass Senden und Empfangen nicht gleichzeitig möglich sind, bedarf es keiner Abschirmung zwischen Sende und Empfangsdiode. Es wird über die Programmierung sichergestellt das der Sender während des erwarteten Erfassen von Signalen nicht leuchtet (Ausgang liegt auf High).
 
 Die \autoref{fig:Steckplatine} zeigt den Aufbau auf einer Steckplatine.
 
@@ -192,9 +196,62 @@ Diese werden in der Implementierung wie folgt genutzt
 	\item 0 - 96 = WLAN-Daten
 	\item 97 - 149 = Vorgehalten für weitere Einstellungen
 	\item 150 = Stationsanzahl bzw. Anzahl der gespeicherten Infrarotcodes
-	\item 151 - 4095 = Stationen bzw. Infrarotcodes
+	\item 151 - 4095 = Stationen
 \end{itemize}
-Die tatsächliche Länge von Infrarotcodes ist abhängig von den verwendeten Protokollen.
+Die tatsächliche Länge von Infrarotcodes ist abhängig von den verwendeten Protokollen und variieren in der Anzahl des benötigten Speichers.
+In der \autoref{fig:EEPROM} ist die Aufteilung des Speichers Schematisch dargestellt.
+Eine Station besteht aus der Bezeichnung (Namen) der Station und die dazugehörige Anzahl an Buchstaben sowie die dazugehörigen IR-Codes (Zeiten) mit der Anzahl an Werten.
+\begin{figure}[!ht]
+\centering
+\begin{tikzpicture}
+%Erster Block
+\draw (0,0) -- (1,0) (1,1) --  (0,1) -- (0,0);
+\draw (2,0) -- (3,0)  -- (3,1) --  (2,1);
+\draw[loosely dotted] (2,1) -- (1,1);
+\draw[loosely dotted] (2,0) -- (1,0);
+\node[text width=4cm] at (2.4,1.2) {0};
+\node[text width=4cm] at (4.3,1.2) {96};
+\node[text width=4cm] at (2.2,0.45) {WiFi-Settings};
+%Zweiter Block
+\draw (4,0) -- (5,0) -- (5,1) --  (4,1) -- (4,0);
+\draw (5,0) -- (6,0) (6,1) --  (5,1) -- (5,0);
+\draw (7,0) -- (8,0)  -- (8,1) --  (7,1);
+\draw[loosely dotted] (6,1) -- (7,1);
+\draw[loosely dotted] (6,0) -- (7,0);
+\node[text width=4cm] at (6.2,1.2) {150};
+\node[text width=4cm] at (7.2,1.2) {151};
+\node[text width=4cm] at (9.2,1.2) {4095};
+
+\node[text width=4cm] at (6.00,0.45) {\footnotesize Anzahl};
+\node[text width=4cm] at (7.7,0.45) {IR-Codes};
+% Detailansicht von IR-Codes
+
+\draw (1,-2) -- (2,-2) -- (2,-1) --  (1,-1) -- (1,-2);
+\draw (2,-2) -- (3,-2)  (3,-1) --  (2,-1) -- (2,-2);
+\draw (4,-2) -- (5,-2)  -- (5,-1) --  (4,-1);
+\draw[loosely dotted] (3,-1) -- (4,-1);
+\draw[loosely dotted] (3,-2) -- (4,-2);
+\node[text width=4cm] at (3.05,-1.55) {\footnotesize Anzahl};
+\node[text width=4cm] at (4.2,-1.55) {\footnotesize Name \\ 1 Byte / Zeichen};
+\draw (5,-2) -- (6,-2) -- (6,-1) --  (5,-1) -- (5,-2);
+\draw (6,-2) -- (7,-2)  (7,-1) --  (6,-1) -- (6,-2);
+\draw (8,-2) -- (9,-2)  -- (9,-1) --  (8,-1);
+\draw[loosely dotted] (7,-1) -- (8,-1);
+\draw[loosely dotted] (7,-2) -- (8,-2);
+\node[text width=4cm] at (7.05,-1.55) {\footnotesize Anzahl};
+\node[text width=4cm] at (8.6,-1.55) {\footnotesize Zeiten \\ (2 Byte / Int)};
+\draw[loosely dotted] (9,-1) -- (10,-1);
+\draw[loosely dotted] (9,-2) -- (10,-2);
+
+%Verbindungen
+\draw (5,0) -- (1,-1);
+\draw (8,0) -- (10,-1);
+
+\end{tikzpicture}
+\caption{Aufbau des Speichers}
+\label{fig:EEPROM}
+\end{figure}
+
 
 \subsubsection{Setup}
 %TODO Okay so?
@@ -257,6 +314,7 @@ Nun kann ein drahtloses Netzwerkfähiges Gerät sich mit dem ESP8266 verbinden u
 Sollte die Verbindung mit einem drahtloses Netzwerk erfolgreich sein, so wird zusätzlich noch der \acs{mDNS}-Dienst ausgeführt.
 Dies ist ein konfigurationsloses Verfahren um lokale Netzwerkadressen als Namen bereitzustellen.
 Dieses Verfahren muss explizit vom entsprechendem System unterstützt werden.
+
 Es kann über \url{iot_remote.local} oder die zugewiesene IP-Adresse auf den ESP8266 zugegriffen werden.
 
 Den Zugriff und die Darstellung der Website des ESP8266 wird in der Loop-Funktion geregelt.
@@ -344,7 +402,7 @@ Die Länge des Pulses beschreibt den gesendeten Befehl an den Infrarotempfänger
 Dies kann mit Hilfe eines $\mu$s-delay Befehl realisiert werden.
 Jeder Puls ist 1/38000 Sekunden (26,3 $\mu$s) lang. 
 Gerundet auf 26 $\mu$s ist die Modulationsfrequenz realisierbar mit dem Alternieren von 1 und 0, wobei ein Takt 13$\mu$s 1 und 13$\mu$s 0 sein muss.
-Die restlichen 0.3 $\mu$s werden ca. von den Ansteuerungsfunktionen für das Wechseln zwischen HIGH und LOW des Ausgangs sowie der Schleife verwendet.
+Die restlichen 0.3 $\mu$s werden ca. von den Ansteuerungsfunktionen für das Wechseln zwischen 1 und 0 des Ausgangs sowie der Schleife verwendet.
 %TODO Pseudocode wenn fertig ?
 
 \section{Fazit}
@@ -353,8 +411,18 @@ Die restlichen 0.3 $\mu$s werden ca. von den Ansteuerungsfunktionen für das Wec
 %TODO Vervollständigen
 
 Im Verlaufe des Projektes ist ein über ein drahtloses Netzwerk steuerbare Mikrocontroller-Anwendung entstanden, welcher in einem heimischen Netzwerk verwendet werden kann.
+Dabei können WLAN- und Infrarotdaten gespeichert werden.
+Außerdem können gespeicherte Infrarotsignale gesendet werden um so zum Beispiel einen Umschaltvorgang eines Fernsehers auszulösen.
+Die ganze Realisierung ist im direkten Vergleich zu einer Logitech MyHarmony Universalfernbedingung sehr kostengünstig.
 
-Erworbene Fertigkeiten:
+Problematisch in einem heimischen Netzwerk ist, dass die IP-Adresse im Netzwerk typischerweise dynamisch Vergeben wird.
+Daher muss die IP-Adresse zuvor ermittelt werden um per Browser auf die Website des ESP8266 zugreifen zu können.
+Mit mDNS sowie dessen Unterstützung kann einfach über \url{iot_remote.local} zugegriffen werden, sodass die IP-Adresse nicht bekannt sein muss.
+Im AcessPoint-Modus wird immer über die IP-Adresse \url{192.168.4.1} zugegriffen.
+
+Es besteht natürlich die Einschränkung, dass nur Geräte, welche mit einer Trägerfrequenz von 38kHz arbeiten, unterstützt werden.
+
+Folgende Fertigkeiten wurden im Verlaufe des Projektes erworben:
 \begin{itemize}
 	\item Programmierung in einer Arduino \acs{IDE} inklusive entsprechender Konfiguration der \acs{IDE}
 	\item Programmierung eines ESP8266 in C/C++
@@ -362,7 +430,8 @@ Erworbene Fertigkeiten:
 	\item Erworbenes Verständnis für die Funktionsweise von Infrarotsendern und Empfängern
 \end{itemize} 
 
-Es ist in der gewählten Realisierung nicht möglich die Stromsparmaßnahmen des Mikrocontrollers zu verwenden, da hierbei die Verbindung zum drahtlosen Netzwerk unterbrochen werden. Der Mikrocontroller kann dann nicht mehr auf Anfragen aus dem Netzwerk reagieren und dadurch nicht daraus geweckt werden.
+Es ist in der gewählten Realisierung nicht möglich die Stromsparmaßnahmen des Mikrocontrollers zu verwenden, da hierbei die Verbindung zum drahtlosen Netzwerk unterbrochen werden. 
+Der Mikrocontroller kann dann nicht mehr auf Anfragen aus dem Netzwerk reagieren und dadurch nicht daraus geweckt werden.
 
 Der Quellcode für das Projekt ist auf GitHub verfügbar unter:\\ \url{https://github.com/Ava-chan/IOT_IR_Remote}\footnote{Stand: \today}
 
