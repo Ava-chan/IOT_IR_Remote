@@ -24,7 +24,7 @@
 
 \begin{document}
 \title{IOT - Remote}   
-\author{Eike Florian Petersen / Michael H} %TODO: Ich weiß deinen Nachnamen nicht 
+\author{Eike Florian Petersen / Michael H}
 \date{\today}
 
 \frame{\titlepage
@@ -38,12 +38,23 @@
 \frame{\frametitle{Inhaltsverzeichnis}\tableofcontents} 
 
 
-\section {Motivation / Aufgaben}
-\frame {\frametitle{\thesection.~\insertsection}%\thesection.\thesubsection~\insertsection~- \insertsubsection}
-Motivation:\\
-Es soll eine frei konfigurierbare IoT-Infrarot Schnittstelle entstehen, welche außer dem Sender und seiner Stromversorgung keine weitere zusätzliche Hardware benötigt. Das erstrebte Ziel hebt sich von älteren Produkten der Firma Logitech aufgrund seiner nicht benötigten zweiten Hardwarekomponente (Fernbedienung) ab. Gleiches strebt auch Logitech mit dem MyHarmony Hub (aktuell \EUR{129,00}) an.\\
-~\\
-Aufgaben:\\
+\section {Einleitung}
+\subsection*{Motivation}
+\frame {\frametitle{\thesection.\thesubsection~\insertsection~- \insertsubsection}
+\begin{itemize}
+	\item Entwicklung frei konfigurierbare IoT-Infrarot Schnittstelle/Fernbedingung
+	\item Günstige Lösung im Vergleich zu einer teuren programmierbaren Fernbedingung
+	\begin{itemize}
+		\item $\rightarrow$ Logitech MyHarmony (aktuell \EUR{129,00})
+	\end{itemize}
+	\item Steuerung über verschiedener Endgeräte (Tablet, Handy, PC,..) per Browser
+\end{itemize}
+
+%Es soll eine frei konfigurierbare IoT-Infrarot Schnittstelle entstehen, welche außer dem Sender und seiner Stromversorgung keine weitere zusätzliche Hardware benötigt. Das erstrebte Ziel hebt sich von älteren Produkten der Firma Logitech aufgrund seiner nicht benötigten zweiten Hardwarekomponente (Fernbedienung) ab. Gleiches strebt auch Logitech mit dem MyHarmony Hub (aktuell \EUR{129,00}) an.\\
+}
+
+\subsection*{Aufgaben}
+\frame {\frametitle{\thesection.\thesubsection~\insertsection~- \insertsubsection}
 \begin{itemize}
 	\item WiFi Einstellungen hinterlegen
 	\item Fallback in AP Modus
@@ -75,7 +86,7 @@ Aufgaben:\\
 }
 
 \section {Programm}
-\subsection{EEPROM}
+\subsection*{EEPROM}
 \frame {\frametitle{\thesection.\thesubsection~\insertsection~- \insertsubsection}
 Lesen :\\
 ~ EEPROM.read(bytenr);\\~\\
@@ -134,7 +145,7 @@ Schreiben:\\
 %	\item 151 - 4095 = Stationen bzw. Infrarotcodes
 }
 
-\subsection{Infrarot}
+\subsection*{Infrarot}
 \frame {\frametitle{\thesection.\thesubsection~\insertsection~- \insertsubsection}
 Lesen:\\
 \begin{itemize}
@@ -154,18 +165,76 @@ Wiedergeben:\\
 
 }
 
-\subsection{Webserver}
+\subsection*{Webserver}
 \frame {\frametitle{\thesection.\thesubsection~\insertsection~- \insertsubsection}
+\begin{minipage}{0.49\textwidth} 
+\begin{itemize}
+\item Setup( )
+\begin{itemize}
+	\item Lese Daten aus Speicher
+	\item Starte Modus
+\end{itemize}
+\item Loop( )
+\begin{itemize}
+	\item Verarbeite Anfragen von IP-Adresse oder \url{iot_remote.local} (mDNS)
+	\item Rufe entsprechende Funktionen auf (z.B. Infrarotcodes aufnehmen)
+	\item Liefere Website aus	
+\end{itemize}
 
-%TODO :Es befüllen
+\end{itemize}
+\end{minipage}
+\hfill
+\begin{minipage}{0.49\textwidth}
 
+% Define block styles
+\tikzstyle{decision} = [diamond, draw, 
+    text width=4.5em, text badly centered, node distance=3cm, inner sep=0pt]
+\tikzstyle{block} = [rectangle, draw, 
+    text width=5em, text centered, rounded corners, minimum height=4em]
+\tikzstyle{line} = [draw, -latex']
+\tikzstyle{cloud} = [draw, ellipse, node distance=3cm,
+    minimum height=2em]
+
+\begin{tikzpicture}[node distance = 2cm, auto, scale=0.5, every node/.style={scale=0.8}]
+    % Place nodes
+    \node [block] (connectWLAN) {Verbinde mit WLAN};
+    \node [decision, below of=connectWLAN] (decide) {Erfolgreich ?};
+   	\node [block, left of=decide, node distance=4cm] (startAP) {Starte als AP};
+    \node [block, below of=decide, node distance=3cm] (mDNS) {Starte mDNS};
+ 	\node [block, below of=mDNS] (launch) {Starte Server};
+
+    % Draw edges
+
+    \path [line] (connectWLAN) -- (decide);
+	\path [line] (decide) -- node [near start] {Nein} (startAP);
+    \path [line] (startAP) |- (launch);
+    \path [line] (decide) -- node {Ja}(mDNS);
+    \path [line] (mDNS) -- (launch);
+\end{tikzpicture}
+\end{minipage}
 }
 
-\section {Aufgabenverteilung}
-\frame {\frametitle{\thesection.~\insertsection}
+\section{Fazit}
+\subsection*{Probleme bei der Umsetzung}
+\frame {\frametitle{\thesection.\thesubsection~\insertsection~- \insertsubsection}
+%TODO :Es befüllen
+	\begin{itemize}
+		\item dynamisch zugewiesene IP-Adresse im WLAN 
+		\begin{itemize}
+			\item $\rightarrow$ einfacher Zugriff per mDNS
+		\end{itemize}
+		\item schwieriges Debuggen, da alle Pins belegt %TODO Diese Aussage okay? -> Weil GPIO nicht auf low liegt... 
+		\begin{itemize}
+			\item $\rightarrow$ nur möglich, wenn GPIO\_0 auf Low liegt
+		\end{itemize}
+	\end{itemize}
+}
+
+\subsection*{Aufgabenverteilung}
+\frame {\frametitle{\thesection.\thesubsection~\insertsection~- \insertsubsection}
 Michael\\
 \begin{itemize}
-	\item WLAN Einstellungen, Fallback in AP-Modus
+	\item WLAN Einstellungen, Fallback in AP-Modus, mDNS
 	\item EEPROM Schreiben, Lesen
 	\item Dokumentation
 \end{itemize}  
@@ -174,18 +243,18 @@ Eike\\
 	\item Elektronische Schaltung
 	\item IR Empfang, Speichern, Senden
 	\item HTML-Layout
-	\item Vortrag
 \end{itemize} 
 }
 
-\section {Probleme bei der Umsetzung}
-\frame {\frametitle{\thesection.~\insertsection}
+\subsection*{Ergebnis}
+\frame {\frametitle{\thesection.\thesubsection~\insertsection~- \insertsubsection}
 %TODO :Es befüllen
-}
-
-\section {Fazit}
-\frame {\frametitle{\thesection.~\insertsection}
-%TODO :Es befüllen
+\begin{itemize}
+	\item Programmierbare IoT-Fernbedingung realisiert
+	\item $\rightarrow$ kostengünstig %als Logitech Harmony!! 
+	\item Zugriff über verschiedenste Endgeräte möglich %Notebook, Handy, Tablet, PC....
+	\item Code und Dokumentation abrufbar unter: \url{https://github.com/Ava-chan/IOT_IR_Remote}
+\end{itemize}
 }
 
 \section {Live Demo}
