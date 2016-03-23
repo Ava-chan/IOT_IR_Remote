@@ -325,6 +325,16 @@ In der \autoref{fig:Start} sind solche Tasten mit der Bezeichnung \qq{On} und \q
 \subsubsection{Infrarotsignale Empfangen}
 %TODO erklären ?? Wie funktioniert das? (Eike)
 %TODO mit Pseudocode?
+Damit Infrarotsignale einer Fernbedingung gelesen werden können, wird ein Infrarotempfänger benötigt.
+In diesem Projekt wurde der Empfänger TSOP4838 für die Trägerfrequenz 38kHz verwendet.
+Damit Infrarotsignale vom ESP8266 verstanden werden, muss sich die Anwendung im Aufnahmemodus für Infrarotcodes befinden.
+Dann kann durch den \acs{GPIO}\_0, welcher als Eingang definiert ist, der Infrarotcode über den TSOP4838 aufgenommen werden.
+
+Realisiert wird das ganze in dem am \acs{GPIO}\_0 mit einer Taktlänge von 26.3 $\mu$s gelesen wird.
+Es werden dabei 10.000 Lesevorgänge durchgeführt, sodass das Lesen von einem kompletten Infrarotcode ca. 263ms dauert.
+Dabei werden nur die Flankenwechsel mit der jeweiligen Abgriffsnummer gepeichert.
+Dies bietet den Vorteil, dass wenig Speicherplatz auf dem ESP8266 verschwendet wird.
+
 \subsubsection{Infrarotsignale Senden}
 %TODO vervollständigen (Eike)
 Damit Infrarotsignale mit einer Trägerfrequenz von 38kHz gesendet werden, bedarf es einem Trick in der Programmierung um dies zu realisieren.
@@ -332,8 +342,9 @@ Dies geschieht in dem der digitale Ausgang \acs{GPIO}\_2 zwischen einer logische
 Die Länge des Pulses beschreibt den gesendeten Befehl an den Infrarotempfänger.
 
 Dies kann mit Hilfe eines $\mu$s-delay Befehl realisiert werden.
-Jeder Puls ist 1/38000 Sekunden (26,3 $\mu$s) lang. Die restlichen 0.3 $\mu$s werden ca. von den Ansteuerungfunktionen für das Wechseln zwischen HIGH und LOW des Ausgangs so wie der Schleife verwendet.
-Gerundet auf 26 $\mu$s ist die Modulationsfrequenz realisierbar mit:
+Jeder Puls ist 1/38000 Sekunden (26,3 $\mu$s) lang. 
+Gerundet auf 26 $\mu$s ist die Modulationsfrequenz realisierbar mit dem Alternieren von 1 und 0, wobei ein Takt 13$\mu$s 1 und 13$\mu$s 0 sein muss.
+Die restlichen 0.3 $\mu$s werden ca. von den Ansteuerungsfunktionen für das Wechseln zwischen HIGH und LOW des Ausgangs sowie der Schleife verwendet.
 %TODO Pseudocode wenn fertig ?
 
 \section{Fazit}
