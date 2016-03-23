@@ -24,7 +24,7 @@
 
 \begin{document}
 \title{IOT - Remote}   
-\author{Eike Florian Petersen / Michael H} %TODO Ich weiß deinen Nachnamen nicht 
+\author{Eike Florian Petersen / Michael H} %TODO: Ich weiß deinen Nachnamen nicht 
 \date{\today}
 
 \frame{\titlepage
@@ -53,38 +53,6 @@ Aufgaben:\\
 \end{itemize}
 }
 % Häufige Probleme mit dem Hub und der IOs / Android Anwendung, so wie später auslaufender Support von bestimmten Versionen von iOS und Android wird durch das Nutzen eines Webservers vorgebeugt
-
-
-%\subsection {Konzept, Arten}
-%\frame {\frametitle{\thesection.\thesubsection~\insertsection~- \insertsubsection}
-%~\\
-%Ein Tablespace (deutsch Tabellenraum) bezeichnet einen Speicherort (ein oder mehrere Dateien), in dem Tabellen, Indizes und andere Datenobjekte abgelegt werden. Er dient zur Trennung der logischen und physischen Speicherung.\\
-%~\\
-%Arten des Dateizugriffs$^1$:\\
-%\begin{itemize} 
-%\item SMS - `Operation' System Managed Storage
-%\item DMS - Database Managed Storage
-%\end{itemize}
-%\begin{minipage}{6cm}
-%Tablespace Arten in Oracle$^2$:
-%\begin{itemize} 
-%\item System Tablespace
-%\item Sysaux Tablespace
-%\item Rollback- / Undo Tablespace
-%\item Tablespace für temporäre Daten
-%\end{itemize}
-%\btVFill \tiny
-%~\\
-%~\\
-%Quellen: \\
-%1 https://de.wikipedia.org/wiki/Tablespace\\
-%2 http://docs.oracle.com/cd/B19306\_01/server.102/b14220/physical.htm\#i2006
-%\end{minipage}
-%\vspace{7mm}
-%\begin{minipage}{4mm}
-%  \includegraphics[width=4.6cm]{cncpt037}
-%\end{minipage}
-%}
 
 \section {Bauteilliste}
 \frame {\frametitle{\thesection.~\insertsection}
@@ -160,10 +128,6 @@ Schreiben:\\
 \draw (8,0) -- (10,-1);
 
 \end{tikzpicture}
-
-
-
-
 %	\item 0 - 96 = WLAN-Daten
 %	\item 97 - 149 = Vorgehalten für weitere Einstellungen
 %	\item 150 = Stationsanzahl bzw. Anzahl der gespeicherten Infrarotcodes
@@ -172,11 +136,28 @@ Schreiben:\\
 
 \subsection{Infrarot}
 \frame {\frametitle{\thesection.\thesubsection~\insertsection~- \insertsubsection}
+Lesen:\\
+\begin{itemize}
+	\item Abgreifen mit 38 kHz (26.3 $\mu$s / Takt) mit 10.000 Abgriffen $\rightarrow$ 263 ms.
+	\item Gespeichert werden nur die Flankenwechsel mit der jeweiligen Abgriffsnummer.\\
+	Vorteil: Int (2 Byte), geringe Anzahl
+\end{itemize}
+%TODO : Beispiel Einfügen
+
+
+Wiedergeben:\\
+\begin{itemize}
+	\item Emulieren von Signalen, welche auf eine Trägerfrequenz von 38kHz moduliert sind.
+	\item 1Takt $\rightarrow$ 13.15 $\mu$s High, 13.15 $\mu$s Low
+\end{itemize}
+%TODO : Beispiel Einfügen
 
 }
 
 \subsection{Webserver}
 \frame {\frametitle{\thesection.\thesubsection~\insertsection~- \insertsubsection}
+
+%TODO :Es befüllen
 
 }
 
@@ -199,12 +180,12 @@ Eike\\
 
 \section {Probleme bei der Umsetzung}
 \frame {\frametitle{\thesection.~\insertsection}
-Meow
+%TODO :Es befüllen
 }
 
 \section {Fazit}
 \frame {\frametitle{\thesection.~\insertsection}
-Meow
+%TODO :Es befüllen
 }
 
 \section {Live Demo}
