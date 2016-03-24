@@ -99,7 +99,7 @@ Eine übliche Infrarot-Fernbedienung sendet ein Signal welches bei den meisten H
 In diesem Projekt wird eine Fernbedingung mit 38kHz realisiert. Bei genügend hoher Toleranz können hiermit aber auch Empfänger gesteuert werden, welche ein 36 kHz Signal erwarten.
 Es ist jedoch wichtig sich auf eine Frequenz festzulegen, da die Frequenz Einfluss auf Bauteile und Programmierung hat.
 
-Über eine \ac{PAM} auf die Trägerfrequenz wird das codierte Signal übertragen.
+Über eine \ac{PWM} auf die Trägerfrequenz wird das codierte Signal übertragen.
 Jede Taste auf einer Fernbedingung besitzt eine eigene Codierung.
 Weiterhin existieren verschiedene Protokolle zur Codierung von Signalen.
 Die Protokolle werden in diesem Projekt vernachlässigt, da die Codierung im Wesentlichen nur kopiert und gespeichert wird.
@@ -112,7 +112,7 @@ Weiterhin besitzt der integrierte Schaltkreis einen Bandpassfilter um Störungen
 Meist sind Fotodiode und Schaltkreis in einem Kunststoffgehäuse integriert.
 Wir haben uns für den TSOP4838\footnote{Datenblatt: \url{http://mkpochtoi.narod.ru/TSOP4836_ds.pdf} Stand: \today} entschieden, da dieser auf 38 kHz abgestimmt ist. Weitere Trägerfrequenzen sind in gleicher Bauform erhältlich.
 
-Auf die konkreten Details zu \acs{PAM} wird in dieser Dokumentation nicht eingegangen.
+Auf die konkreten Details zu \acs{PWM} wird in dieser Dokumentation nicht eingegangen.
 
 \section{Realisierung}
 Nachdem die Grundlagen für das Projekt betrachtet wurden, soll nun die konkrete Realisierung des Projektes verdeutlicht werden.
@@ -124,7 +124,7 @@ Für die Realisierung des Projektes wurden folgende Komponenten genutzt:
 	\item Zwei Kondensatoren: 10 $\mu$F, 100nF
 	\item Infrarotdiode: 1,5V / 80mA
 	\item Vorwiderstand für Diode: 22 Ohm
-	\item 2 poliger Umschalter (ON ON)
+	\item 2 poliger Umschalter
 	\item Taster
 	\item Infrarotfotodiode: TSOP4838 für die Trägerfrequenz 38kHz
 	\item USB-to-UART-Programmierer: PL2303
@@ -142,8 +142,8 @@ Die \autoref{fig:Schalplan} zeigt den Schaltplan für die Realisierung einer Inf
 \end{figure}
 
 Für die Programmierung des Mikrocontrollers wird ein USB-to-\acs{UART}-Programmierer (PL2303) verwendet.
-Dieser liefert an \acs{VCC} 5V. 
-Wird er ohne PC betrieben kann er über ein einfaches 5V USB Netzteil auch als Zuleitung verwendet werden. Die \acs{TXD} und \acs{RXD}-Leitungen liegen dann auf 0V (beide haben ein High Level von 5V, sind am ESP8266 aber auch 5V tolerant).
+Dieser liefert an \acs{VCC} 5V und 3,3V an TXD sowie RXD.
+Wird er ohne PC betrieben kann er über ein einfaches 5V USB Netzteil auch als Zuleitung verwendet werden. Die \acs{TXD} und \acs{RXD}-Leitungen liegen dann auf 0V.
 Der ESP8266 selbst benötigt 3,3V und ist nicht 5V tolerant, sodass ein Spannungsregler verwendet wird um 3,3V für den Mikrocontroller zur Verfügung zu stellen.
 Als Spannungsregler bietet sich zum Beispiel der LM1117-3V3\footnote{\url{http://www.ti.com/lit/ds/symlink/lm1117.pdf} ; Stand: \today} (verwendet) oder ein L7805 an.
 Zur Spannungsstabilisierung wird dem Regler ein 100 nF Kondensator vor und ein 10$\mu$F-Kondensator nachgeschaltet.
@@ -187,8 +187,11 @@ Diese Funktion wird immer wieder aufgerufen und entsprechende Befehle in der Fun
 Zum Beispiel wird an dieser Stelle geprüft ob ein Client eine Anfrage an den Mikrocontroller gesendet hat.
 Falls ja, werden die entsprechenden Funktionen ausgeführt.
 
-Der ESP8266 besitzt einen \acs{EEPROM} von der Größe 4096Byte.
-Diese werden in der Implementierung wie folgt genutzt 
+Der ESP8266 besitzt einen \acs{EEPROM} und dessen Größe ist Modell abhängig (512kB - 4MB).
+In der derzeitigen Implementierung wird nur ein Sektor (4096Bytes) verwendet.
+Dies ist begründet mit der Verwendung des ESP8266 Community Package inklusive Header, welches derzeit keine größere Größe vorsieht.
+
+Dieser Speicher wird in der Implementierung wie folgt genutzt: 
 \begin{itemize}
 	\item 0 - 96 = WLAN-Daten
 	\item 97 - 149 = Vorgehalten für weitere Einstellungen
@@ -311,8 +314,7 @@ Nun kann ein drahtloses Netzwerkfähiges Gerät sich mit dem ESP8266 verbinden u
 Sollte die Verbindung mit einem drahtloses Netzwerk erfolgreich sein, so wird zusätzlich noch der \acs{mDNS}-Dienst ausgeführt.
 Dies ist ein konfigurationsloses Verfahren um lokale Netzwerkadressen als Namen bereitzustellen.
 Dieses Verfahren muss explizit vom entsprechendem System unterstützt werden.
-
-Es kann über \url{iot_remote.local} oder die zugewiesene IP-Adresse auf den ESP8266 zugegriffen werden.
+Es kann anschließend über \url{iot_remote.local} oder die zugewiesene IP-Adresse auf den ESP8266 zugegriffen werden.
 
 Den Zugriff und die Darstellung der Website des ESP8266 wird in der Loop-Funktion geregelt.
 \subsubsection{Loop}
@@ -362,7 +364,7 @@ In der \autoref{fig:WIFI} wird die Konfigurationsmaske für drahtlose Netzwerkda
 	\label{fig:WIFI}
 \end{figure}
 Bei Klick auf \qq{Submit} werden die angegeben Netzwerkdaten in dem \acs{EEPROM} des ESP8266 gespeichert und bei einem Neustart verwendet um eine Verbindung zum drahtlosen Netzwerk herzustellen.
-Weiterhin ist es mit Klick auf \qq{clear all stations} möglich, alle gespeicherten Infrarotcodes zurückzusetzen.
+Weiterhin ist es mit Klick auf \qq{clear all stations} möglich alle gespeicherten Infrarotcodes zurückzusetzen.
 
 Wird auf der Startseite \qq{Record New} gewählt, dann können Infrarotcodes aufgenommen, bezeichnet und abgespeichert werden.
 Das Ergebnis der Aufnahme wird bei \autoref{fig:Show} gezeigt. Der Code wird als Liste von Zahlen gespeichert, welche den Zeitpunkt des Wechsels von Low zu High oder von High zu Low beschreiben. Hierbei gibt jede Zahl den Takt in der Trägerfrequenz seid dem ersten empfangenen High an.
@@ -415,7 +417,7 @@ Folgende Fertigkeiten wurden im Verlaufe des Projektes erworben:
 	\item Programmierung in einer Arduino \acs{IDE} inklusive entsprechender Konfiguration der \acs{IDE}
 	\item Planen und Programmieren einer Firmware eines ESP8266 in C/C++ unter Verwendung von gegebenen Header-Dateien.
 	\item Umgang mit dem ESP8266 und den Schaltungs-Design-Beschränkungen (GPIO\_0 und GPIO\_2)
-	\item Erworbenes Verständnis für die Funktionsweise von Infrarotsendern und Empfängern, \acs{PAM}
+	\item Erworbenes Verständnis für die Funktionsweise von Infrarotsendern und Empfängern, \acs{PWM}
 \end{itemize} 
 
 Es ist in der gewählten Realisierung nicht möglich die Stromsparmaßnahmen des Mikrocontrollers zu verwenden, da hierbei die Verbindung zum drahtlosen Netzwerk unterbrochen werden. 
@@ -446,7 +448,7 @@ Der Quellcode für das Projekt ist auf GitHub verfügbar unter:\\ \url{https://g
 \acro{MIMO}{\textbf{M}ultiple \textbf{I}nput \textbf{M}ultiple \textbf{O}utput}{ - Nutzung mehrerer Sende- und Empfangsantennen}
 \acro{P2P}{\textbf{P}eer to \textbf{P}eer}{ - Direkte Endgerät zu Endgerät Kommunikation}
 \acro{PLL}{\textbf{P}hase-\textbf{L}ocked \textbf{L}oop}{ - Damit ein konstantes abgeleitetes Signal zwischen einem äußeren Referenzsignal und Oszillator entsteht, wird solch eine Phasenregelschleife verwendet} 
-\acro{PAM}{\textbf{P}uls-\textbf{A}mplituden-\textbf{M}odulation}
+\acro{PWM}{\textbf{P}uls-\textbf{W}eiten-\textbf{M}odulation}
 \acro{RST}{Reset}{ -Setzt den Controller zurück, sodass dieser einen Neustart durchführt}
 \acro{RXD}{\textbf{R}eceive \textbf{D}ata}{ - Eingehende Leitung für Daten}
 \acro{soft-AP}{\textbf{soft}ware enabled \textbf{A}ccess \textbf{P}oint}{ - ein über Software erstellter Access Point, welcher auf einem Gerät erzeugt wird welches nicht speziell als Router gedacht ist}

@@ -73,7 +73,7 @@
 	\item Zwei Kondensatoren: 10 $\mu$F, 100nF
 	\item IR-Diode: 1,5V / 80mA
 	\item Vorwiderstand für IR-Diode: 22 Ohm
-	\item 2 poliger Umschalter (ON ON)
+	\item 2 poliger Umschalter
 	\item Taster
 	\item IR-Fotodiode: TSOP4838 für die Trägerfrequenz 38kHz \\ (TSOP48.. in 30, 33, 36, 36.7, 38, 40, 50kHz)
 	\item USB-to-UART-Programmierer: PL2303 \\ (Vss-Out = 5V)
@@ -147,25 +147,27 @@ Schreiben:\\
 %	\item 151 - 4095 = Stationen bzw. Infrarotcodes
 }
 
-\subsection*{Infrarot}
+\subsection*{Infrarot Empfangen}
 \frame {\frametitle{\thesection.\thesubsection~\insertsection~- \insertsubsection}
-Lesen:\\
 \begin{itemize}
 	\item Abgreifen mit 38 kHz (26.3 $\mu$s / Takt) mit 10.000 Abgriffen $\rightarrow$ 263 ms.
 	\item Demodulation über TSOP4838
 	\item Gespeichert werden nur die Flankenwechsel mit der jeweiligen Abgriffsnummer.\\
 	Vorteil: Int (2 Byte), geringe Anzahl
 \end{itemize}
-\tiny
+\footnotesize
 ~ ~ ~ Ein IR-Block einer Philips Fernbedienung Taste ON/OFF:\\
 ~ ~ ~ ~ ~ 9, 3420, 3515, 3545, 3562, 3591, 3609, 3623, 3640, 3654, 3702, \\
 ~ ~ ~ ~ ~ 3747, 3765, 3779, 3796, 3810, 3827, 3841, 3858, 3872, 3889, 3903, \\
 ~ ~ ~ ~ ~ 3920, 3934, 3952, 3966, 3983, 3997, 4014, 4028, 4045, 4059, 4076,\\
 ~ ~ ~ ~ ~ 4090, 4123, 4137, 4154, 4184, 4201, 4215, 4232 \\
 \normalsize 
-Wiedergeben:\\
+
+}
+\subsection*{Infrarot Senden}
+\frame {\frametitle{\thesection.\thesubsection~\insertsection~- \insertsubsection}
 \begin{itemize}
-	\item Emulieren von Signalen, welche auf eine Trägerfrequenz von 38kHz moduliert (PAM) sind.
+	\item Emulieren von Signalen, welche auf eine Trägerfrequenz von 38kHz moduliert (PWM) sind.
 	\item 1Takt High $\rightarrow$ 13.15 $\mu$s High, 13.15 $\mu$s Low
 	\item 1Takt Low  $\rightarrow$ 26.3 $\mu$s Low
 	\item Gesamtsequenz wird 5 mal wiederholt
@@ -231,7 +233,7 @@ Wiedergeben:\\
 		\end{itemize}
 		\item schwieriges Debuggen, da alle Pins belegt
 		\begin{itemize}
-			\item $\rightarrow$ Serieller Monitor nur möglich, wenn GPIO\_2 auf High liegt
+			\item $\rightarrow$ Serieller Monitor nur möglich, wenn GPIO\_0 auf High liegt
 		\end{itemize}
 		\item Speichern großer Datenmengen im Flash
 		\begin{itemize}
@@ -261,16 +263,16 @@ Eike\\
 
 \subsection*{Ergebnis}
 \frame {\frametitle{\thesection.\thesubsection~\insertsection~- \insertsubsection}
-Ergebnisse:\\
 \begin{itemize}
 	\item Prototyp einer programmierbaren IoT-Fernbedingung realisiert
-	\item $\rightarrow$ kostengünstig (3.85\$ ohne Verbrauchsmaterial über \url{http://aliexpress.com}) %als Logitech Harmony!! 
+	\item $\rightarrow$ kostengünstig:\\ 3.85\$ ohne Verbrauchsmaterial über \url{http://aliexpress.com} %als Logitech Harmony!! 
 	\item Zugriff über verschiedenste Endgeräte möglich %Notebook, Handy, Tablet, PC....
-	\item Code und Dokumentation abrufbar unter: \url{https://github.com/Ava-chan/IOT_IR_Remote}
+	\item Code,Vortrag und Dokumentation abrufbar unter: \url{https://github.com/Ava-chan/IOT_IR_Remote}
 \end{itemize}
-~\\
-%TODO: Diesen Block noch mit aufnehmen ?
-Mögliche weitere Schritte:\\
+}
+
+\subsection*{Weiterentwicklung}
+\frame {\frametitle{\thesection.\thesubsection~\insertsection~- \insertsubsection}
 \begin{itemize}
 	\item LED gegen ein kostengünstigeres Modell mit höherem Abstrahlwinkel tauschen
 	\item IR-Codeverwaltung (Editorkomponente) erweitern
